@@ -301,6 +301,11 @@ dialog::backdrop{background:rgba(5,3,8,.72);backdrop-filter:blur(4px)}
 .switch{text-align:center;font-size:14.5px;color:var(--muted)}
 .switch button{background:none;border:0;color:var(--accent);font-weight:600;cursor:pointer;padding:0}
 
+.gate-inline{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--surface-2);border:1px dashed var(--line-2);border-radius:var(--r);padding:16px 18px}
+.gate-inline svg.i{color:var(--accent);width:22px;height:22px}
+.gate-inline .grow{flex:1;min-width:200px}
+.gate-inline b{display:block}
+.gate-inline small{color:var(--muted)}
 .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .stat{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;display:grid;gap:2px;cursor:pointer;color:inherit;text-decoration:none;font:inherit}
 .stat:hover{border-color:var(--line-2)}
@@ -458,7 +463,7 @@ const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const root=$("#root");
 let me=null;
-let filters={city:"",role:""};
+let filters={city:"",role:""}, tfilters={city:"",role:""};
 let landingAud="talent";
 
 function h(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -697,7 +702,7 @@ async function viewLanding(){
   renderSteps();
   const upd=()=>{const v=+$("#cRange").value;$("#cVal").textContent=eur(v);$("#cPay").textContent=eur(v);$("#cFee").textContent=eur(v*COMMISSION);$("#cGet").textContent=eur(v*(1-COMMISSION));};
   $("#cRange").oninput=upd;upd();
-  $$('.lnav nav a').forEach(a=>a.onclick=e=>{const id=a.getAttribute("href").slice(1);if(id==="talento")return;e.preventDefault();document.getElementById(id)?.scrollIntoView({behavior:"smooth"});});
+  $$('.lnav nav a').forEach(a=>a.onclick=e=>{const id=a.getAttribute("href").slice(1);if(id==="talento")return;e.preventDefault();const el=document.getElementById(id);if(!el)return;const y=el.getBoundingClientRect().top+scrollY-72;window.scrollTo({top:y,behavior:"smooth"});setTimeout(()=>{if(Math.abs(scrollY-y)>40)window.scrollTo(0,y);},700);});
 
   const {data:evs=[]}=await sb.from("events").select("*, profiles:owner_id(display_name)").eq("status","abierto").gte("event_date",new Date().toISOString()).order("event_date").limit(6);
   const feed=$("#feed"); if(!feed) return;
@@ -706,10 +711,11 @@ async function viewLanding(){
     return;
   }
   const open=evs.slice(0,3), locked=evs.slice(3);
-  const lockedRows=locked.length?locked:open.slice(0,2);
+  const lockedRows=locked;
   feed.innerHTML=open.map(e=>eventRow(e,{locked:true})).join("")+
-   `<div class="lock"><div class="feed">${lockedRows.map(e=>eventRow(e,{locked:true})).join("")}</div>
-     <div class="gate"><div class="box">${I("lock")}<h3>Ve todos los bolos y su caché</h3><p class="muted">Crea tu cuenta gratis para filtrar por ciudad y postularte.</p><button class="btn pri lg" data-signup>Desbloquear gratis</button></div></div></div>`;
+   (lockedRows.length?`<div class="lock"><div class="feed">${lockedRows.map(e=>eventRow(e,{locked:true})).join("")}</div>
+     <div class="gate"><div class="box">${I("lock")}<h3>Ve todos los bolos y su caché</h3><p class="muted">Crea tu cuenta gratis para filtrar por ciudad y postularte.</p><button class="btn pri lg" data-signup>Desbloquear gratis</button></div></div></div>`
+     :`<div class="gate-inline">${I("lock")}<div class="grow"><b>Ve el caché de cada bolo y postúlate</b><small>Crea tu cuenta gratis en dos minutos.</small></div><button class="btn pri" data-signup>Desbloquear gratis</button></div>`);
   $$(".feed > .ev",feed).forEach(b=>b.onclick=()=>openAuth("reg"));
 }
 
@@ -737,7 +743,7 @@ function shell(active,content){
       <div class="testbar" style="border-radius:10px;margin-bottom:20px;border:1px solid rgba(255,181,71,.3)">MODO PRUEBAS · Para pagar usa la tarjeta 4242 4242 4242 4242, cualquier fecha futura y cualquier CVC</div>
       <div id="view">${content||`<div class="skel"></div>`}</div>
     </div></main></div>`;
-  const lo=async()=>{await sb.auth.signOut();me=null;go("inicio");};
+  const lo=async()=>{await sb.auth.signOut();me=null;filters={city:"",role:""};tfilters={city:"",role:""};comTab="todo";go("inicio");};
   $("#logout").onclick=lo;$("#logoutM").onclick=lo;
   return $("#view");
 }
@@ -1049,7 +1055,7 @@ function publicShell(){
 
 async function viewTalento(){
   const v=me?shell("talento"):publicShell();
-  const f=filters;
+  const f=tfilters;
   let q=sb.from("profiles").select("*").in("role",TALENT).order("created_at",{ascending:false}).limit(60);
   if(f.city) q=q.ilike("city",`%${f.city}%`);
   if(f.role) q=q.eq("role",f.role);
@@ -1065,7 +1071,7 @@ async function viewTalento(){
     <div class="tags">${chip(p.role)}${(p.genres||[]).slice(0,3).map(g=>`<span class="tag">${h(g)}</span>`).join("")}</div>
     ${p.rate_eur?`<div class="calc">Desde ${eur(p.rate_eur)} por bolo</div>`:""}${miniStats(ST[p.id])}</a>`).join("")
     :`<div class="empty" style="grid-column:1/-1">${I("users")}<b>Aún no hay perfiles con esos filtros</b>${!me?`<button class="btn pri" data-signup="dj">Sé el primero</button>`:""}</div>`}</div>`;
-  $("#flt").onsubmit=e=>{e.preventDefault();filters={city:$("#fCity").value.trim(),role:$("#fRole").value};viewTalento();};
+  $("#flt").onsubmit=e=>{e.preventDefault();tfilters={city:$("#fCity").value.trim(),role:$("#fRole").value};viewTalento();};
 }
 
 async function viewPerfil(id){
