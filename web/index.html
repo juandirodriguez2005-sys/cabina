@@ -306,6 +306,8 @@ dialog::backdrop{background:rgba(5,3,8,.72);backdrop-filter:blur(4px)}
 .gate-inline .grow{flex:1;min-width:200px}
 .gate-inline b{display:block}
 .gate-inline small{color:var(--muted)}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer}
+.linkbtn:hover{text-decoration:underline}
 .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .stat{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;display:grid;gap:2px;cursor:pointer;color:inherit;text-decoration:none;font:inherit}
 .stat:hover{border-color:var(--line-2)}
@@ -506,18 +508,49 @@ function renderAuth(){
     b.innerHTML=`<div class="dlg-h"><div><h2 id="dlgTitle">Bienvenido de nuevo</h2><p>Entra para ver tus bolos y tu panel.</p></div><button class="iconbtn" data-close aria-label="Cerrar">${I("x")}</button></div>
     <form class="form" id="loginF" novalidate>
       <div class="field"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="email" required></div>
-      <div class="field"><label for="lPass">Contraseña</label><input id="lPass" type="password" autocomplete="current-password" required></div>
+      <div class="field"><div class="split"><label for="lPass">Contraseña</label><button type="button" class="linkbtn" data-forgot>¿Olvidaste tu contraseña?</button></div><input id="lPass" type="password" autocomplete="current-password" required></div>
       <button class="btn pri lg block" id="lBtn">Entrar</button>
     </form>
     <div class="switch">¿Aún no tienes cuenta? <button data-goreg>Regístrate gratis</button></div>
     <div class="demo-box"><span class="lbl">Modo pruebas · entra con una cuenta demo</span>
       <div class="demo-grid">${DEMO.map(([em,l,ic])=>`<button type="button" class="btn sm ghost" data-demo="${em}">${I(ic)}${l}</button>`).join("")}</div></div>`;
+    $("[data-forgot]",b).onclick=()=>{reg.mode="forgot";reg.email=$("#lEmail").value.trim();renderAuth();};
     $$("[data-demo]",b).forEach(x=>x.onclick=()=>{$("#lEmail").value=x.dataset.demo;$("#lPass").value=DEMO_PASS;$("#loginF").requestSubmit();});
     $("#loginF").onsubmit=async e=>{e.preventDefault();const btn=$("#lBtn");btn.disabled=true;
       const {error}=await sb.auth.signInWithPassword({email:$("#lEmail").value.trim(),password:$("#lPass").value});
       btn.disabled=false;
       if(error) return toast(error.message.includes("Invalid")?"Email o contraseña incorrectos.":error.message.includes("confirm")?"Confirma tu email antes de entrar. Revisa tu bandeja.":error.message,true);
       $("#authDlg").close(); await loadMe(); toast(`Hola, ${me?.profile.display_name||""}`); go("resumen");};
+  }else if(reg.mode==="forgot"){
+    b.innerHTML=`<div class="dlg-h"><div><h2 id="dlgTitle">Recupera tu contraseña</h2><p>Escribe el email de tu cuenta y te mandamos un enlace para crear una nueva.</p></div><button class="iconbtn" data-close aria-label="Cerrar">${I("x")}</button></div>
+    <form class="form" id="fgF" novalidate>
+      <div class="field"><label for="fEmail">Email</label><input id="fEmail" type="email" autocomplete="email" value="${h(reg.email||"")}" required></div>
+      <button class="btn pri lg block" id="fBtn">Enviar enlace</button>
+    </form>
+    <div class="switch">¿Te has acordado? <button data-gologin>Volver a entrar</button></div>`;
+    $("#fgF").onsubmit=async e=>{e.preventDefault();const email=$("#fEmail").value.trim();
+      if(!/^\S+@\S+\.\S+$/.test(email)) return toast("Ese email no parece válido.",true);
+      const btn=$("#fBtn");btn.disabled=true;btn.textContent="Enviando…";
+      const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname+"?reset=1"});
+      btn.disabled=false;btn.textContent="Enviar enlace";
+      if(error) return toast(/rate|limit|seconds/i.test(error.message)?"Has pedido demasiados enlaces. Espera unos minutos y vuelve a intentarlo.":"No hemos podido enviar el email. Inténtalo más tarde.",true);
+      b.innerHTML=`<div class="dlg-h"><div><h2 id="dlgTitle">Revisa tu email</h2><p>Si hay una cuenta con <b>${h(email)}</b>, te llegará un enlace para crear una contraseña nueva. Mira también en spam.</p></div><button class="iconbtn" data-close aria-label="Cerrar">${I("x")}</button></div>
+        <div class="empty">${I("inbox")}<b>Enlace enviado</b><span>Ábrelo desde este mismo dispositivo. Caduca en una hora.</span></div>
+        <button class="btn ghost block" data-gologin>Volver a entrar</button>`;bindDlg();};
+  }else if(reg.mode==="newpass"){
+    b.innerHTML=`<div class="dlg-h"><div><h2 id="dlgTitle">Crea tu nueva contraseña</h2><p>Elige una contraseña de al menos 8 caracteres.</p></div></div>
+    <form class="form" id="npF" novalidate>
+      <div class="field"><label for="np1">Nueva contraseña</label><input id="np1" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div class="field"><label for="np2">Repite la contraseña</label><input id="np2" type="password" autocomplete="new-password" minlength="8" required></div>
+      <button class="btn pri lg block" id="npBtn">Guardar contraseña</button>
+    </form>`;
+    $("#npF").onsubmit=async e=>{e.preventDefault();const a=$("#np1").value,c=$("#np2").value;
+      if(a.length<8) return toast("La contraseña necesita 8 caracteres o más.",true);
+      if(a!==c) return toast("Las dos contraseñas no coinciden.",true);
+      const btn=$("#npBtn");btn.disabled=true;
+      const {error}=await sb.auth.updateUser({password:a});btn.disabled=false;
+      if(error) return toast(/different|same/i.test(error.message)?"La nueva contraseña tiene que ser distinta de la anterior.":"No se ha podido guardar: "+error.message,true);
+      $("#authDlg").close(); toast("Contraseña cambiada. ¡Ya estás dentro!"); go("resumen");};
   }else if(reg.step===1){
     b.innerHTML=`<div class="stepper"><i class="on"></i><i></i></div>
     <div class="dlg-h"><div><h2 id="dlgTitle">¿Qué eres?</h2><p>Elige tu perfil. Así te enseñamos lo que te interesa.</p></div><button class="iconbtn" data-close aria-label="Cerrar">${I("x")}</button></div>
@@ -924,6 +957,10 @@ function viewAjustes(){
     <div class="field"><label for="pIg">Instagram</label><input id="pIg" value="${h(p.instagram||"")}" placeholder="@tuusuario"></div>
     <div class="field"><label for="pBio">${t?"Sobre ti":"Sobre la sala o promotora"}</label><textarea id="pBio" maxlength="1500" placeholder="${t?"Tu estilo, dónde has pinchado, qué te diferencia…":"Aforo, estilo musical, equipo de la cabina…"}">${h(p.bio||"")}</textarea></div>
     <div><button class="btn pri">Guardar cambios</button></div></form>
+  <form class="panel form" id="pwF" style="max-width:780px;margin-top:18px" novalidate><div class="panel-h"><h3>Contraseña</h3><span class="calc">${h(me.user.email||"")}</span></div>
+    <div class="grid2"><div class="field"><label for="pw1">Nueva contraseña</label><input id="pw1" type="password" autocomplete="new-password" minlength="8"></div>
+      <div class="field"><label for="pw2">Repite la contraseña</label><input id="pw2" type="password" autocomplete="new-password" minlength="8"></div></div>
+    <div><button class="btn ghost" id="pwBtn">Cambiar contraseña</button></div></form>
   <div class="panel" style="max-width:780px;margin-top:18px"><div class="panel-h"><h3>Foto y documentos</h3><span class="calc">PDF o imagen · máx. 15 MB</span></div>
     <div class="docrow">${avatar(p)}<div class="grow"><b>Foto de perfil</b><small>${p.avatar_url?"Subida":"Sin foto"} · JPG o PNG</small></div>
       <label class="btn sm ghost">${I("up")} ${p.avatar_url?"Cambiar":"Subir"}<input type="file" accept="image/*" data-up="avatar" hidden></label></div>
@@ -932,6 +969,13 @@ function viewAjustes(){
       <label class="btn sm ${url?"ghost":"pri"}">${I("up")} ${url?"Reemplazar":"Subir"}<input type="file" accept="application/pdf,image/*" data-up="${k}" hidden></label></div>`;}).join("")}
   </div>`;
   fillMyStats();
+  $("#pwF").onsubmit=async e=>{e.preventDefault();const a=$("#pw1").value,c=$("#pw2").value;
+    if((me.user.email||"").endsWith("@cabina.demo")) return toast("Las cuentas demo no pueden cambiar la contraseña.",true);
+    if(a.length<8) return toast("La contraseña necesita 8 caracteres o más.",true);
+    if(a!==c) return toast("Las dos contraseñas no coinciden.",true);
+    const btn=$("#pwBtn");btn.disabled=true;const {error}=await sb.auth.updateUser({password:a});btn.disabled=false;
+    if(error) return toast(/different|same/i.test(error.message)?"La nueva contraseña tiene que ser distinta de la actual.":"No se ha podido cambiar: "+error.message,true);
+    $("#pw1").value="";$("#pw2").value="";toast("Contraseña cambiada");};
   $$("[data-up]",v).forEach(inp=>inp.onchange=async()=>{
     const f=inp.files[0]; if(!f) return;
     if(f.size>15*1024*1024) return toast("El archivo pesa más de 15 MB.",true);
@@ -1299,6 +1343,11 @@ window.addEventListener("hashchange",route);
     try{const r=await callFn("bookings",{action:"verify",booking_id:q.get("booking")});toast(r.status==="pagado"?"Pago completado. ¡Bolo cerrado!":"Estamos confirmando el pago…");}catch(x){toast(x.message,true);}
     history.replaceState(null,"",location.pathname+location.hash);
   }else if(q.get("pago")==="cancelado"){toast("Pago cancelado. No se ha cobrado nada.",true);history.replaceState(null,"",location.pathname+location.hash);}
+  if(q.get("reset")==="1"){
+    history.replaceState(null,"",location.pathname+"#resumen");
+    if(me){route();reg={mode:"newpass",step:1};renderAuth();$("#authDlg").showModal();return;}
+    toast("El enlace ha caducado o ya se usó. Pide uno nuevo desde «Entrar».",true);
+  }
   route();
 })();
 </script>
