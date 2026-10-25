@@ -1,0 +1,1300 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cabina · Contrata DJs y fotógrafos</title>
+<meta name="description" content="La plataforma donde salas y promotores contratan DJs y fotógrafos. Registro gratis, pago seguro y comisión solo cuando se cierra el bolo.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: landing de una columna (1180px) / app con barra lateral fija de 248px que en móvil pasa a barra inferior */
+:root{
+  --bg:#0f0c12; --bg-2:#141018; --surface:#1a1520; --surface-2:#231d2a; --surface-3:#2d2636;
+  --line:#2f2838; --line-2:#3d3447;
+  --fg:#f4f0f6; --fg-2:#d6cddc; --muted:#9a8fa3;
+  --accent:#ffb547; --accent-2:#ff8a3d; --accent-ink:#1d1306;
+  --violet:#a594ff;
+  --ok:#4fd18b; --warn:#ffb547; --bad:#ff6b7a;
+  --display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --r:14px; --r-lg:20px;
+  --shadow:0 20px 60px -20px rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 var(--body);min-height:100vh;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+h1,h2,h3,h4{font-family:var(--display);letter-spacing:-.025em;text-wrap:balance;margin:0;line-height:1.08}
+p{margin:0}
+.muted{color:var(--muted)}
+.lbl{font:500 11.5px/1 var(--mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+
+/* Botones */
+.btn{border:0;border-radius:11px;padding:11px 18px;font-weight:600;cursor:pointer;background:var(--surface-2);color:var(--fg);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;transition:background .15s,transform .15s,box-shadow .15s}
+.btn:hover{background:var(--surface-3)}
+.btn.pri{background:linear-gradient(180deg,#ffc266,var(--accent));color:var(--accent-ink);box-shadow:0 6px 24px -8px rgba(255,181,71,.6)}
+.btn.pri:hover{transform:translateY(-1px);box-shadow:0 10px 30px -8px rgba(255,181,71,.75)}
+.btn.ghost{background:transparent;border:1px solid var(--line-2)}
+.btn.ghost:hover{background:var(--surface)}
+.btn.lg{padding:15px 24px;font-size:17px;border-radius:13px}
+.btn.sm{padding:7px 12px;font-size:14px;border-radius:9px}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+
+/* Chips */
+.chip{display:inline-flex;align-items:center;gap:6px;font:500 11.5px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:5px 9px;border-radius:999px;background:var(--surface-2);color:var(--fg-2);white-space:nowrap}
+.chip.dj{background:rgba(255,181,71,.14);color:var(--accent)}
+.chip.fotografo{background:rgba(165,148,255,.16);color:#c8bdff}
+.chip.ok{background:rgba(79,209,139,.14);color:var(--ok)}
+.chip.bad{background:rgba(255,107,122,.14);color:var(--bad)}
+.chip.wait{background:rgba(255,181,71,.12);color:var(--warn)}
+.chip .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+/* Formularios */
+.field{display:grid;gap:7px;min-width:0}
+.field>label{font-size:13.5px;color:var(--fg-2);font-weight:600}
+.field .hint{font-size:12.5px;color:var(--muted)}
+input,select,textarea{background:var(--bg-2);border:1px solid var(--line-2);border-radius:11px;padding:11px 13px;width:100%;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,181,71,.15)}
+textarea{min-height:120px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form{display:grid;gap:18px}
+
+/* ---------- Landing ---------- */
+.lnav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:rgba(15,12,18,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:31;background:var(--bg)}
+.lnav .wrap{display:flex;align-items:center;gap:28px;height:68px}
+.logo{font:800 23px/1 var(--display);letter-spacing:-.03em;color:var(--fg);text-decoration:none;display:flex;align-items:center;gap:9px}
+.logo .mk{width:26px;height:26px;border-radius:8px;background:conic-gradient(from 210deg,var(--accent),var(--accent-2),#ff5f8f,var(--violet),var(--accent));display:grid;place-items:center}
+.logo .mk::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--bg)}
+.lnav nav{display:flex;gap:22px;flex:1}
+.lnav nav a{color:var(--muted);text-decoration:none;font-weight:500;font-size:15px}
+.lnav nav a:hover{color:var(--fg)}
+.lnav .acts{display:flex;gap:10px}
+
+.hero{position:relative;overflow:hidden;padding:76px 0 90px}
+.hero::before{content:"";position:absolute;inset:-40% -10% auto auto;width:780px;height:780px;background:radial-gradient(closest-side,rgba(255,138,61,.20),transparent 70%);pointer-events:none}
+.hero::after{content:"";position:absolute;left:-200px;bottom:-300px;width:640px;height:640px;background:radial-gradient(closest-side,rgba(165,148,255,.12),transparent 70%);pointer-events:none}
+.hero .wrap{position:relative;z-index:1;display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center}
+.pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:6px 14px 6px 8px;font-size:13.5px;color:var(--fg-2)}
+.pill b{background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:2px 8px;font-size:11.5px;font-weight:700}
+.hero h1{font-size:clamp(42px,6.4vw,78px);font-weight:800;margin:22px 0 22px;letter-spacing:-.04em;line-height:.98}
+.hero h1 .hl{background:linear-gradient(90deg,var(--accent),var(--accent-2) 60%,#ff5f8f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .sub{font-size:19px;color:var(--fg-2);max-width:54ch;line-height:1.55}
+.hero .ctas{display:flex;gap:12px;flex-wrap:wrap;margin:32px 0 26px}
+.trust{display:flex;gap:22px;flex-wrap:wrap;color:var(--muted);font-size:14px}
+.trust span{display:inline-flex;align-items:center;gap:7px}
+.trust svg{color:var(--ok);width:16px;height:16px}
+
+.mock{position:relative;display:grid;gap:14px}
+.mcard{background:linear-gradient(180deg,var(--surface-2),var(--surface));border:1px solid var(--line-2);border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow)}
+.mcard.tilt{transform:rotate(-1.5deg)}
+.mcard.off{margin-left:40px;transform:rotate(1.2deg)}
+.mrow{display:flex;align-items:center;gap:12px}
+.mav{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font:800 15px var(--display);color:var(--accent-ink);flex:none}
+.mbar{height:8px;border-radius:99px;background:var(--surface-3);overflow:hidden}
+.mbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.toastmock{position:absolute;right:-8px;bottom:-22px;background:var(--fg);color:var(--bg);padding:11px 15px;border-radius:12px;font-weight:700;font-size:14px;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow)}
+.toastmock svg{color:#14864a}
+
+.band{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg-2)}
+.band .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.band .it{padding:26px 22px;border-left:1px solid var(--line);display:grid;gap:6px}
+.band .it:first-child{border-left:0}
+.band .it b{font:800 30px/1 var(--display);letter-spacing:-.03em}
+.band .it span{color:var(--muted);font-size:14px}
+
+section.s{padding:96px 0}
+.s-head{display:grid;gap:14px;max-width:720px;margin-bottom:44px}
+.s-head h2{font-size:clamp(32px,4.4vw,50px);font-weight:800;letter-spacing:-.035em}
+.s-head p{font-size:18px;color:var(--fg-2)}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;margin-bottom:30px}
+.seg button{border:0;background:none;padding:9px 16px;border-radius:9px;color:var(--muted);font-weight:600;cursor:pointer}
+.seg button.on{background:var(--surface-3);color:var(--fg)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:26px;display:grid;gap:12px;align-content:start}
+.step .n{font:500 12px var(--mono);color:var(--accent);letter-spacing:.1em}
+.step h3{font-size:22px}
+.step p{color:var(--muted)}
+.step .ic{width:44px;height:44px;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;color:var(--accent)}
+.step .ic svg{width:22px;height:22px}
+
+.feed{display:grid;gap:12px;position:relative}
+.feed .lock{position:relative}
+.feed .lock .ev{filter:blur(5px);opacity:.55;pointer-events:none}
+.gate{position:absolute;inset:0;display:grid;place-items:center;z-index:2}
+.gate .box{background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:26px 28px;text-align:center;display:grid;gap:12px;box-shadow:var(--shadow);max-width:440px;margin:0 16px}
+.gate .box h3{font-size:24px}
+
+.price-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:stretch}
+.calc-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:28px;display:grid;gap:20px}
+.calc-card input[type=range]{padding:0;border:0;background:none;accent-color:var(--accent);height:28px}
+.split-bar{display:flex;height:14px;border-radius:99px;overflow:hidden}
+.split-bar i{background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.split-bar s{background:var(--violet);text-decoration:none}
+.kv{display:flex;justify-content:space-between;align-items:baseline;font-variant-numeric:tabular-nums;gap:12px}
+.kv b{font-family:var(--display);font-size:20px}
+.kv.big b{font-size:44px;color:var(--accent);letter-spacing:-.03em}
+.plan{background:linear-gradient(160deg,rgba(255,181,71,.12),transparent 50%),var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);padding:28px;display:grid;gap:18px;align-content:start}
+.plan .amt{font:800 64px/1 var(--display);letter-spacing:-.04em}
+.plan ul{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.plan li{display:flex;gap:10px;align-items:flex-start;color:var(--fg-2)}
+.plan li svg{color:var(--ok);margin-top:3px}
+
+.faq{display:grid;gap:10px;max-width:820px}
+.faq details{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 22px}
+.faq summary{cursor:pointer;font-weight:600;font-size:17px;list-style:none;display:flex;justify-content:space-between;gap:16px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font:400 24px/1 var(--display);color:var(--muted);transition:transform .2s}
+.faq details[open] summary::after{transform:rotate(45deg)}
+.faq details p{color:var(--muted);margin-top:12px;max-width:68ch}
+
+.final{padding:20px 0 100px}
+.final .box{background:radial-gradient(600px 300px at 85% 0%,rgba(255,138,61,.25),transparent 70%),radial-gradient(500px 300px at 0% 100%,rgba(165,148,255,.18),transparent 70%),var(--surface);border:1px solid var(--line-2);border-radius:28px;padding:64px 48px;display:grid;grid-template-columns:1.3fr 1fr;gap:32px;align-items:center}
+.final h2{font-size:clamp(32px,4.4vw,52px);font-weight:800;letter-spacing:-.035em}
+.final .roles{display:grid;gap:10px}
+.rolebtn{display:flex;align-items:center;gap:14px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:14px;padding:14px 16px;cursor:pointer;text-align:left;transition:border-color .15s,transform .15s}
+.rolebtn:hover{border-color:var(--accent);transform:translateX(3px)}
+.rolebtn .ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:var(--surface-2);color:var(--accent);flex:none}
+.rolebtn b{display:block}
+.rolebtn small{color:var(--muted);font-size:13px}
+.rolebtn .arr{margin-left:auto;color:var(--muted)}
+footer.f{border-top:1px solid var(--line);padding:34px 0 50px;color:var(--muted);font-size:14px}
+footer.f .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+
+/* Tarjeta de bolo (compartida) */
+.ev{display:grid;grid-template-columns:76px 1fr auto;gap:18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 18px 14px 14px;cursor:pointer;text-align:left;width:100%;transition:border-color .15s,background .15s}
+.ev:hover{border-color:var(--line-2);background:var(--surface-2)}
+.date{background:var(--bg-2);border:1px solid var(--line);border-radius:11px;padding:8px 0;text-align:center}
+.date b{display:block;font:800 28px/1.05 var(--display)}
+.date span{font:500 11px/1.4 var(--mono);text-transform:uppercase;color:var(--accent);letter-spacing:.06em}
+.ev .meta{min-width:0;display:grid;gap:5px}
+.ev .meta h3{font-size:18px;overflow:hidden;text-overflow:ellipsis}
+.ev .meta p{color:var(--muted);font-size:14px}
+.ev .meta p svg{width:14px;height:14px;vertical-align:-2px;margin-right:5px}
+.price{font:700 21px/1 var(--display);font-variant-numeric:tabular-nums;text-align:right;letter-spacing:-.02em}
+.price small{display:block;font:500 10.5px/1.7 var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.price .lk{display:inline-flex;gap:6px;align-items:center;color:var(--muted);font-size:15px}
+
+/* ---------- App ---------- */
+.shell{display:grid;grid-template-columns:248px 1fr;min-height:100vh}
+.side{position:sticky;top:0;height:100vh;border-right:1px solid var(--line);background:var(--bg-2);display:flex;flex-direction:column;padding:20px 14px calc(20px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+.side a.logo{padding:4px 10px 22px;font:800 23px/1 var(--display);color:var(--fg);background:none}
+.side .sec{font:500 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:16px 12px 8px}
+.side a{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;color:var(--fg-2);text-decoration:none;font-weight:500;font-size:15px;position:relative}
+.side a:hover{background:var(--surface);color:var(--fg)}
+.side a.on{background:var(--surface-2);color:var(--fg)}
+.side a.on svg{color:var(--accent)}
+.side a .badge{margin-left:auto;background:var(--accent);color:var(--accent-ink);font:700 11px/1 var(--body);border-radius:99px;padding:3px 7px}
+.side .cta{margin:18px 4px 0}
+.side .me{margin-top:auto;border-top:1px solid var(--line);padding:14px 6px 0;display:flex;gap:10px;align-items:center}
+.side .me>div:not(.avatar){min-width:0;flex:1}
+.side .me b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side .me small{color:var(--muted);font-size:12.5px}
+.iconbtn{background:none;border:1px solid var(--line);border-radius:9px;width:34px;height:34px;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.iconbtn:hover{color:var(--fg);border-color:var(--line-2)}
+.main{min-width:0;padding:30px max(20px,env(safe-area-inset-right,0px)) 80px 36px}
+.main-in{max-width:1080px;margin:0 auto}
+.ph{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:26px}
+.ph h1{font-size:clamp(28px,3.4vw,36px);font-weight:800}
+.ph p{color:var(--muted);margin-top:6px}
+.mobtop{display:none}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:grid;gap:10px}
+.kpi .top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13.5px;font-weight:500}
+.kpi .top svg{width:16px;height:16px}
+.kpi b{font:800 32px/1 var(--display);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.kpi small{color:var(--muted);font-size:12.5px}
+.kpi.hl{background:linear-gradient(160deg,rgba(255,181,71,.16),transparent 60%),var(--surface);border-color:rgba(255,181,71,.35)}
+.kpi.hl b{color:var(--accent)}
+
+.cols{display:grid;grid-template-columns:1.55fr 1fr;gap:18px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:22px;display:grid;gap:16px;align-content:start;min-width:0}
+.panel-h{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.panel-h h3{font-size:18px}
+.panel-h a{font-size:14px;text-decoration:none;font-weight:600}
+.stack{display:grid;gap:12px}
+.rowi{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);min-width:0}
+.rowi:first-child{border-top:0;padding-top:0}
+.rowi .grow{flex:1;min-width:0}
+.rowi .grow b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.rowi .grow small{color:var(--muted);font-size:13px}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font:800 15px var(--display);color:var(--accent);flex:none;overflow:hidden}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar.lg{width:84px;height:84px;font-size:30px}
+.progress{display:grid;gap:8px}
+.progress .bar{height:8px;background:var(--surface-3);border-radius:99px;overflow:hidden}
+.progress .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));border-radius:99px;transition:width .4s}
+.todo{display:flex;gap:11px;align-items:center;padding:10px 12px;border-radius:11px;background:var(--bg-2);border:1px solid var(--line);text-decoration:none;color:var(--fg-2);font-size:14.5px;cursor:pointer}
+.todo:hover{border-color:var(--line-2)}
+.todo .ck{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center;flex:none}
+.todo.done{color:var(--muted);text-decoration:line-through;cursor:default}
+.todo.done .ck{background:var(--ok);border-color:var(--ok);color:#06210f}
+.todo.done .ck svg{width:13px;height:13px;stroke-width:3}
+.todo .arr{margin-left:auto;color:var(--muted)}
+.notice{display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:var(--r);background:linear-gradient(90deg,rgba(255,181,71,.12),rgba(255,181,71,.04));border:1px solid rgba(255,181,71,.3);margin-bottom:22px;flex-wrap:wrap}
+.notice .grow{flex:1;min-width:220px}
+.notice b{display:block}
+.notice small{color:var(--fg-2)}
+.notice svg.i{color:var(--accent);width:22px;height:22px}
+
+.toolbar{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px}
+.toolbar .grow{flex:1;min-width:180px}
+.list{display:grid;gap:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.tcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px;display:grid;gap:12px;align-content:start;color:inherit;text-decoration:none;transition:border-color .15s,transform .15s}
+.tcard:hover{border-color:var(--line-2);transform:translateY(-2px)}
+.person{display:flex;gap:12px;align-items:center;min-width:0}
+.person>div{min-width:0}
+.tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{font-size:12px;border:1px solid var(--line-2);border-radius:999px;padding:3px 9px;color:var(--fg-2)}
+.empty{border:1px dashed var(--line-2);border-radius:var(--r-lg);padding:36px 24px;text-align:center;color:var(--muted);display:grid;gap:12px;justify-items:center}
+.empty svg.i{width:30px;height:30px;color:var(--line-2)}
+.empty b{color:var(--fg);font-size:17px}
+.detail{display:grid;grid-template-columns:1.5fr 1fr;gap:24px;align-items:start}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.facts div{background:var(--surface);padding:14px 16px;display:grid;gap:6px}
+.calc{font:500 13px/1.5 var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.back{background:none;border:0;color:var(--muted);cursor:pointer;padding:0;margin-bottom:18px;display:inline-flex;gap:6px;align-items:center;font-weight:500}
+.back:hover{color:var(--fg)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:22px;overflow-x:auto}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;padding:10px 14px;cursor:pointer;color:var(--muted);font-weight:600;white-space:nowrap}
+.tabs button.on{color:var(--fg);border-bottom-color:var(--accent)}
+.skel{background:linear-gradient(90deg,var(--surface),var(--surface-2),var(--surface));background-size:200% 100%;animation:sk 1.2s infinite;border-radius:var(--r);height:84px}
+@keyframes sk{to{background-position:-200% 0}}
+
+/* Registro */
+dialog{background:var(--surface);color:var(--fg);border:1px solid var(--line-2);border-radius:24px;padding:0;width:min(560px,calc(100vw - 24px));box-shadow:var(--shadow);max-height:calc(100vh - 24px)}
+dialog::backdrop{background:rgba(5,3,8,.72);backdrop-filter:blur(4px)}
+.dlg{padding:28px;display:grid;gap:20px}
+.dlg-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.dlg-h h2{font-size:26px;font-weight:800}
+.dlg-h p{color:var(--muted);margin-top:6px}
+.stepper{display:flex;gap:6px}
+.stepper i{height:4px;flex:1;border-radius:99px;background:var(--surface-3)}
+.stepper i.on{background:var(--accent)}
+.roles4{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rolec{position:relative;display:grid;gap:10px;align-content:start;text-align:left;background:var(--bg-2);border:1.5px solid var(--line-2);border-radius:16px;padding:18px;cursor:pointer;transition:border-color .15s,background .15s}
+.rolec:hover{border-color:var(--muted)}
+.rolec.on{border-color:var(--accent);background:rgba(255,181,71,.07)}
+.rolec .ic{width:42px;height:42px;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;color:var(--accent)}
+.rolec .ic svg{width:22px;height:22px}
+.rolec b{font-size:16.5px}
+.rolec small{color:var(--muted);font-size:13px;line-height:1.4}
+.rolec .tick{position:absolute;top:14px;right:14px;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line-2);display:grid;place-items:center}
+.rolec.on .tick{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.rolec .tick svg{width:13px;height:13px;stroke-width:3;opacity:0}
+.rolec.on .tick svg{opacity:1}
+.chosen{display:flex;align-items:center;gap:10px;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14.5px}
+.chosen button{margin-left:auto;background:none;border:0;color:var(--accent);cursor:pointer;font-weight:600}
+.legal{font-size:12.5px;color:var(--muted);text-align:center}
+.switch{text-align:center;font-size:14.5px;color:var(--muted)}
+.switch button{background:none;border:0;color:var(--accent);font-weight:600;cursor:pointer;padding:0}
+
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;display:grid;gap:2px;cursor:pointer;color:inherit;text-decoration:none;font:inherit}
+.stat:hover{border-color:var(--line-2)}
+.stat b{font:800 22px/1.1 var(--display);font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.statbtn{background:none;border:0;padding:0;color:var(--muted);font:inherit;cursor:pointer}
+.statbtn:hover{color:var(--fg)}
+.ministats{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.ministats b{color:var(--fg);font-variant-numeric:tabular-nums}
+.peoplelist{display:grid;max-height:60vh;overflow-y:auto}
+.docrow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.docrow:first-of-type{border-top:0}
+.docrow .grow{flex:1;min-width:160px}
+.docrow .grow b{display:block}
+.docrow .grow small{color:var(--muted);font-size:13px}
+.docic{width:42px;height:42px;border-radius:11px;background:var(--surface-3);display:grid;place-items:center;color:var(--accent);flex:none}
+label.btn{cursor:pointer}
+.social{display:flex;gap:18px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:14.5px}
+.social b{color:var(--fg);font-family:var(--display);font-size:18px;margin-right:3px}
+.post{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:18px;display:grid;gap:12px}
+.post-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.post-h .person small{display:block;font-size:12.5px}
+.post-b{white-space:pre-wrap;color:var(--fg-2);overflow-wrap:anywhere}
+.post-img{width:100%;max-height:520px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.post-f{display:flex;gap:10px}
+.likebtn{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--muted);cursor:pointer;font-weight:600}
+.likebtn:hover{color:var(--fg)}
+.likebtn.on{color:#ff5f8f;border-color:rgba(255,95,143,.4);background:rgba(255,95,143,.08)}
+.likebtn.on svg{fill:currentColor}
+.cmp-f{display:flex;align-items:center;gap:12px;border-top:1px solid var(--line);padding-top:12px}
+.composer textarea{min-height:70px;border:0;background:transparent;padding:8px 0;resize:vertical}
+.composer textarea:focus{box-shadow:none}
+.composer .person{align-items:flex-start}
+.composer .person textarea{flex:1}
+.demo-box{border-top:1px solid var(--line);padding-top:16px;display:grid;gap:10px}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.demo-grid .btn{justify-content:flex-start}
+.testbar{background:repeating-linear-gradient(135deg,rgba(255,181,71,.14) 0 12px,rgba(255,181,71,.07) 12px 24px);color:var(--accent);font:500 12.5px/1.4 var(--mono);text-align:center;padding:7px 16px;border-bottom:1px solid rgba(255,181,71,.3)}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:600;z-index:100;max-width:calc(100vw - 32px);box-shadow:var(--shadow);display:flex;gap:8px;align-items:center}
+.toast.err{background:var(--bad);color:#1a0306}
+
+@media (max-width:980px){
+  .hero .wrap,.price-grid,.final .box,.detail,.cols{grid-template-columns:1fr}
+  .mock{max-width:460px}
+  .kpis{grid-template-columns:1fr 1fr}
+  .band .wrap{grid-template-columns:1fr 1fr}
+  .band .it:nth-child(3){border-left:0}
+  .band .it:nth-child(n+3){border-top:1px solid var(--line)}
+  .lnav nav{display:none}
+}
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .side{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;z-index:40;flex-direction:row;padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));border-right:0;border-top:1px solid var(--line);justify-content:space-around}
+  .side .logo,.side .sec,.side .cta,.side .me,.side a.hide-m{display:none}
+  .side a{flex-direction:column;gap:3px;font-size:11px;padding:7px 4px;flex:1;justify-content:center;text-align:center}
+  .side a .badge{position:absolute;top:2px;right:calc(50% - 22px);margin:0}
+  .main{padding:16px max(16px,env(safe-area-inset-right,0px)) 110px max(16px,env(safe-area-inset-left,0px))}
+  .mobtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+  .steps{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .grid2,.roles4,.facts{grid-template-columns:1fr}
+  .roles4{grid-template-columns:1fr 1fr}
+  .rolec{padding:14px}
+  .rolec small{display:none}
+  .ev{grid-template-columns:62px 1fr;padding:12px}
+  .ev .price{grid-column:2;text-align:left}
+  .date b{font-size:23px}
+  .lnav .acts .btn.ghost{display:none}
+  .hero{padding:44px 0 60px}
+  section.s{padding:64px 0}
+  .final .box{padding:36px 22px}
+  .mcard.off{margin-left:16px}
+  .toastmock{right:0}
+  .kpi b{font-size:26px}
+  .dlg{padding:22px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<dialog id="authDlg" aria-labelledby="dlgTitle"><div class="dlg" id="dlgBody"></div></dialog>
+<dialog id="listDlg" aria-labelledby="listTitle"><div class="dlg" id="listBody"></div></dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL="https://cgygbyqwficmxyxihnoe.supabase.co";
+const SUPABASE_KEY="sb_publishable_RabaF16pCMTDefaycj4Ovw_C8nDu5ET";
+const COMMISSION=0.10;
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+/* ---------- Utilidades ---------- */
+const P={
+ home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+ brief:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2M3 13h18"/>',
+ inbox:'<path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/>',
+ check:'<path d="M5 12l5 5L20 7"/>',
+ card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
+ users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.6-5.5 6.5-5.5s5.5 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14.8c1.8.8 3 2.6 3.5 5.2"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ out:'<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"/>',
+ cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+ pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0119 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
+ euro:'<path d="M17 6.5A7 7 0 106.5 16M17 17.5A7 7 0 016.5 8"/><path d="M4 10.5h9M4 13.5h9"/>',
+ disc:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3a9 9 0 019 9"/>',
+ cam:'<path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13.5" r="3.5"/>',
+ mega:'<path d="M3 10v4h4l7 5V5L7 10z"/><path d="M18 9a4 4 0 010 6"/>',
+ build:'<path d="M4 21V5l8-3 8 3v16"/><path d="M9 21v-5h6v5M9 9h.01M15 9h.01M9 13h.01M15 13h.01"/>',
+ arr:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+ left:'<path d="M19 12H5M11 6l-6 6 6 6"/>',
+ lock:'<rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/>',
+ shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5L16 9.5"/>',
+ bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+ star:'<path d="M12 3l2.8 5.8 6.2.9-4.5 4.4 1 6.3L12 17.5 6.5 20.4l1-6.3L3 9.7l6.2-.9z"/>',
+ cog:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 01-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 010-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 014 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 010 4h-.1a1.7 1.7 0 00-1.5 1z"/>',
+ eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ x:'<path d="M6 6l12 12M18 6L6 18"/>',
+ chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>',
+ heart:'<path d="M12 20s-7.5-4.6-9.2-9.3C1.7 7.4 3.8 4.5 7 4.5c2 0 3.4 1.1 5 3 1.6-1.9 3-3 5-3 3.2 0 5.3 2.9 4.2 6.2C19.5 15.4 12 20 12 20z"/>',
+ file:'<path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h6"/>',
+ up:'<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v4h16v-4"/>',
+ img:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
+ trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+ userplus:'<circle cx="9" cy="8" r="4"/><path d="M2 21c1.4-3.8 4-6 7-6s5.6 2.2 7 6M19 8v6M16 11h6"/>'
+};
+const I=(n,cls="")=>`<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n]||""}</svg>`;
+const ROLES={dj:"DJ",fotografo:"Fotógrafo/a",promotor:"Promotor/a",discoteca:"Discoteca / sala"};
+const ROLE_INFO={
+ dj:{icon:"disc",t:"DJ",d:"Consigue bolos en salas y eventos"},
+ fotografo:{icon:"cam",t:"Fotógrafo/a",d:"Cubre fiestas y vende tu trabajo"},
+ promotor:{icon:"mega",t:"Promotor/a",d:"Monta tus fiestas con el mejor talento"},
+ discoteca:{icon:"build",t:"Discoteca o sala",d:"Llena tu cabina cada fin de semana"}
+};
+const TALENT=["dj","fotografo"];
+// Cuentas demo (modo pruebas). Borrar antes de lanzar.
+const DEMO_PASS="Cabina2026!";
+const DEMO=[["sala@cabina.demo","Sala Nébula","build"],["dj@cabina.demo","DJ Marta Lux","disc"],["foto@cabina.demo","Fotógrafo Leo","cam"],["promo@cabina.demo","Promotora","mega"]];
+// Abierta como archivo local: Stripe no puede volver aquí, así que se abre en otra pestaña
+const LOCAL=!/^https:$/.test(location.protocol)&&!/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+let pendingBooking=null, pendingOnboard=false;
+function openStripe(url){
+  if(LOCAL){const w=window.open(url,"_blank");if(!w)location.href=url;else toast("Stripe se ha abierto en otra pestaña. Al terminar, vuelve aquí.");}
+  else location.href=url;
+}
+window.addEventListener("focus",async()=>{
+  if(pendingBooking){const id=pendingBooking;try{const r=await callFn("bookings",{action:"verify",booking_id:id});if(r.status==="pagado"){pendingBooking=null;toast("Pago completado. ¡Bolo cerrado!");route();}}catch(_){}}
+  else if(pendingOnboard){pendingOnboard=false;route();}
+});
+const MONTHS=["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const root=$("#root");
+let me=null;
+let filters={city:"",role:""};
+let landingAud="talent";
+
+function h(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+const eur=n=>new Intl.NumberFormat("es-ES",{style:"currency",currency:"EUR",maximumFractionDigits:0}).format(n);
+const eurc=c=>new Intl.NumberFormat("es-ES",{style:"currency",currency:"EUR",maximumFractionDigits:c%100?2:0}).format(c/100);
+const fdate=d=>new Date(d).toLocaleString("es-ES",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"});
+const fshort=d=>new Date(d).toLocaleDateString("es-ES",{day:"numeric",month:"short"});
+const initials=n=>h((n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase());
+const avatar=(p,cls="")=>`<div class="avatar ${cls}">${p?.avatar_url&&/^https:\/\//.test(p.avatar_url)?`<img src="${h(p.avatar_url)}" alt="">`:initials(p?.display_name)}</div>`;
+const chip=r=>`<span class="chip ${h(r)}">${h(ROLES[r]||r)}</span>`;
+const stChip=s=>{const m={pendiente:"wait",aceptada:"ok",rechazada:"bad",abierto:"wait",cerrado:"ok",cancelado:"bad",pagado:"ok"};const t={pendiente:"Pendiente",aceptada:"Contratado",rechazada:"Descartada",abierto:"Abierto",cerrado:"Cerrado",cancelado:"Cancelado",pagado:"Pagado"};return `<span class="chip ${m[s]||""}"><span class="dot"></span>${t[s]||h(s)}</span>`;};
+function toast(msg,err=false){$$(".toast").forEach(t=>t.remove());const t=document.createElement("div");t.className="toast"+(err?" err":"");t.innerHTML=(err?"":I("check"))+h(msg);document.body.append(t);setTimeout(()=>t.remove(),4000);}
+const isTalent=()=>me&&TALENT.includes(me.profile.role);
+const isClient=()=>me&&!TALENT.includes(me.profile.role);
+const go=(v,id)=>{const n=id?`${v}-${id}`:v; if(location.hash.slice(1)===n) route(); else location.hash=n;};
+
+async function callFn(name,body){
+  const {data:{session}}=await sb.auth.getSession();
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/${name}`,{method:"POST",headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY,Authorization:`Bearer ${session?.access_token}`},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.error||"Algo ha fallado. Inténtalo de nuevo.");
+  return j;
+}
+async function loadMe(){
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user){me=null;return;}
+  const {data:profile}=await sb.from("profiles").select("*").eq("id",user.id).single();
+  me=profile?{user,profile}:null;
+}
+
+/* ---------- Registro / acceso ---------- */
+let reg={step:1,role:null};
+function openAuth(mode="reg",role=null){
+  reg={step:1,role,mode};
+  renderAuth(); if(!$("#authDlg").open) $("#authDlg").showModal();
+}
+function renderAuth(){
+  const b=$("#dlgBody");
+  if(reg.mode==="login"){
+    b.innerHTML=`<div class="dlg-h"><div><h2 id="dlgTitle">Bienvenido de nuevo</h2><p>Entra para ver tus bolos y tu panel.</p></div><button class="iconbtn" data-close aria-label="Cerrar">${I("x")}</button></div>
+    <form class="form" id="loginF" novalidate>
+      <div class="field"><label for="lEmail">Email</label><input id="lEmail" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="lPass">Contraseña</label><input id="lPass" type="password" autocomplete="current-password" required></div>
+      <button class="btn pri lg block" id="lBtn">Entrar</button>
+    </form>
+    <div class="switch">¿Aún no tienes cuenta? <button data-goreg>Regístrate gratis</button></div>
+    <div class="demo-box"><span class="lbl">Modo pruebas · entra con una cuenta demo</span>
+      <div class="demo-grid">${DEMO.map(([em,l,ic])=>`<button type="button" class="btn sm ghost" data-demo="${em}">${I(ic)}${l}</button>`).join("")}</div></div>`;
+    $$("[data-demo]",b).forEach(x=>x.onclick=()=>{$("#lEmail").value=x.dataset.demo;$("#lPass").value=DEMO_PASS;$("#loginF").requestSubmit();});
+    $("#loginF").onsubmit=async e=>{e.preventDefault();const btn=$("#lBtn");btn.disabled=true;
+      const {error}=await sb.auth.signInWithPassword({email:$("#lEmail").value.trim(),password:$("#lPass").value});
+      btn.disabled=false;
+      if(error) return toast(error.message.includes("Invalid")?"Email o contraseña incorrectos.":error.message.includes("confirm")?"Confirma tu email antes de entrar. Revisa tu bandeja.":error.message,true);
+      $("#authDlg").close(); await loadMe(); toast(`Hola, ${me?.profile.display_name||""}`); go("resumen");};
+  }else if(reg.step===1){
+    b.innerHTML=`<div class="stepper"><i class="on"></i><i></i></div>
+    <div class="dlg-h"><div><h2 id="dlgTitle">¿Qué eres?</h2><p>Elige tu perfil. Así te enseñamos lo que te interesa.</p></div><button class="iconbtn" data-close aria-label="Cerrar">${I("x")}</button></div>
+    <div class="roles4" role="radiogroup" aria-label="Tipo de cuenta">${Object.entries(ROLE_INFO).map(([k,r])=>`
+      <button type="button" class="rolec${reg.role===k?" on":""}" role="radio" aria-checked="${reg.role===k}" data-role="${k}">
+        <span class="tick">${I("check")}</span><span class="ic">${I(r.icon)}</span><b>${r.t}</b><small>${r.d}</small></button>`).join("")}</div>
+    <button class="btn pri lg block" id="r1Next" ${reg.role?"":"disabled"}>Continuar ${I("arr")}</button>
+    <div class="switch">¿Ya tienes cuenta? <button data-gologin>Entrar</button></div>`;
+    $$("[data-role]",b).forEach(x=>x.onclick=()=>{reg.role=x.dataset.role;renderAuth();});
+    $("#r1Next").onclick=()=>{if(reg.role){reg.step=2;renderAuth();}};
+  }else{
+    const r=ROLE_INFO[reg.role]; const talent=TALENT.includes(reg.role);
+    b.innerHTML=`<div class="stepper"><i class="on"></i><i class="on"></i></div>
+    <div class="dlg-h"><div><h2 id="dlgTitle">Crea tu cuenta</h2><p>Gratis para siempre. Sin tarjeta.</p></div><button class="iconbtn" data-close aria-label="Cerrar">${I("x")}</button></div>
+    <div class="chosen"><span style="color:var(--accent)">${I(r.icon)}</span> Te registras como <b>${r.t}</b><button type="button" id="chg">Cambiar</button></div>
+    <form class="form" id="regF" novalidate>
+      <div class="grid2">
+        <div class="field"><label for="rName">${talent?"Nombre artístico":reg.role==="discoteca"?"Nombre de la sala":"Nombre o promotora"}</label><input id="rName" maxlength="80" autocomplete="nickname" required></div>
+        <div class="field"><label for="rCity">Ciudad</label><input id="rCity" autocomplete="address-level2" placeholder="Madrid" required></div>
+      </div>
+      <div class="field"><label for="rEmail">Email</label><input id="rEmail" type="email" autocomplete="email" required></div>
+      <div class="field"><label for="rPass">Contraseña</label><input id="rPass" type="password" autocomplete="new-password" minlength="8" required><span class="hint">Mínimo 8 caracteres.</span></div>
+      <button class="btn pri lg block" id="rBtn">Crear cuenta gratis</button>
+      <p class="legal">Al registrarte aceptas las condiciones de uso. Solo se cobra comisión cuando cierras un bolo.</p>
+    </form>`;
+    $("#chg").onclick=()=>{reg.step=1;renderAuth();};
+    $("#regF").onsubmit=async e=>{e.preventDefault();
+      const name=$("#rName").value.trim(),city=$("#rCity").value.trim(),email=$("#rEmail").value.trim(),password=$("#rPass").value;
+      if(name.length<2) return toast("Escribe tu nombre (mínimo 2 letras).",true);
+      if(!city) return toast("Indica tu ciudad para mostrarte bolos cerca.",true);
+      if(!/^\S+@\S+\.\S+$/.test(email)) return toast("Ese email no parece válido.",true);
+      if(password.length<8) return toast("La contraseña necesita 8 caracteres o más.",true);
+      const btn=$("#rBtn");btn.disabled=true;btn.textContent="Creando tu cuenta…";
+      try{
+        const r=await fetch(`${SUPABASE_URL}/functions/v1/registro`,{method:"POST",headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY},body:JSON.stringify({email,password,role:reg.role,display_name:name,city})});
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok) throw new Error(j.error||"No se ha podido crear la cuenta.");
+        const {error}=await sb.auth.signInWithPassword({email,password});
+        if(error) throw error;
+      }catch(x){btn.disabled=false;btn.textContent="Crear cuenta gratis";return toast(x.message,true);}
+      $("#authDlg").close(); await loadMe(); toast("Cuenta creada. ¡Bienvenido a Cabina!"); go("resumen");};
+  }
+  bindDlg();
+  setTimeout(()=>$("input,.rolec",b)?.focus(),30);
+}
+function bindDlg(){const b=$("#dlgBody");
+  $$("[data-close]",b).forEach(x=>x.onclick=()=>$("#authDlg").close());
+  $("[data-goreg]",b)?.addEventListener("click",()=>openAuth("reg"));
+  $("[data-gologin]",b)?.addEventListener("click",()=>openAuth("login"));}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-signup]");if(t){e.preventDefault();openAuth("reg",t.dataset.signup||null);}const l=e.target.closest("[data-login]");if(l){e.preventDefault();openAuth("login");}});
+
+/* ---------- Tarjeta de bolo ---------- */
+function eventRow(e,{locked=false}={}){
+  const d=new Date(e.event_date);
+  return `<button class="ev" data-ev="${e.id}">
+    <div class="date"><span>${MONTHS[d.getMonth()]}</span><b>${d.getDate()}</b><span>${d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})}</span></div>
+    <div class="meta"><div class="tags">${chip(e.role_needed)}${e.status!=="abierto"?stChip(e.status):""}${e.app_count!=null?`<span class="chip">${e.app_count} postulaci${e.app_count===1?"ón":"ones"}</span>`:""}</div>
+      <h3>${h(e.title)}</h3>
+      <p>${I("pin")}${h(e.venue_name||"Sala por confirmar")} · ${h(e.city)}${e.profiles?` · ${h(e.profiles.display_name)}`:""}</p></div>
+    <div class="price">${locked?`<span class="lk">${I("lock")}Ver caché</span>`:e.budget_eur?eur(e.budget_eur):"A convenir"}<small>presupuesto</small></div>
+  </button>`;
+}
+function bindEv(r=root){$$("[data-ev]",r).forEach(b=>b.onclick=()=>go("evento",b.dataset.ev));}
+
+/* ---------- Landing ---------- */
+const STEPS={
+ talent:[["user","Crea tu perfil gratis","Tu estilo, tu ciudad, tus redes y tu tarifa. En dos minutos las salas ya pueden encontrarte."],
+         ["brief","Postúlate a bolos","Ves los bolos abiertos en tu ciudad y te postulas con tu precio. Sin intermediarios ni llamadas."],
+         ["euro","Cobra seguro","La sala paga por adelantado dentro de Cabina y el dinero llega a tu cuenta. Se acabó perseguir pagos."]],
+ client:[["plus","Publica el bolo","Fecha, sala, estilo y presupuesto. Publicarlo es gratis y lo ven DJs y fotógrafos de tu ciudad."],
+         ["users","Recibe propuestas","Los artistas se postulan con su precio y su perfil. Comparas y eliges sin perder tiempo."],
+         ["shield","Contrata y paga","Pagas con tarjeta en un clic. El artista queda confirmado y tienes tu justificante."]]
+};
+async function viewLanding(){
+  document.title="Cabina · Contrata DJs y fotógrafos";
+  root.innerHTML=`
+  <div class="testbar">MODO PRUEBAS · Pulsa "Entrar" para usar las cuentas demo · Tarjeta de prueba 4242 4242 4242 4242</div>
+  <header class="lnav"><div class="wrap">
+    <a class="logo" href="#inicio"><span class="mk"></span>Cabina</a>
+    <nav><a href="#como">Cómo funciona</a><a href="#bolos">Bolos</a><a href="#talento">Talento</a><a href="#precio">Precio</a></nav>
+    <div class="acts"><button class="btn ghost sm" data-login>Entrar</button><button class="btn pri sm" data-signup>Regístrate gratis</button></div>
+  </div></header>
+
+  <section class="hero"><div class="wrap">
+    <div>
+      <span class="pill"><b>NUEVO</b> Registro gratis para DJs, fotógrafos y salas</span>
+      <h1>Tu próximo bolo<br>empieza <span class="hl">aquí</span>.</h1>
+      <p class="sub">Cabina conecta a discotecas y promotores con DJs y fotógrafos. Publica, postúlate, contrata y cobra en un mismo sitio, sin perseguir a nadie por WhatsApp.</p>
+      <div class="ctas">
+        <button class="btn pri lg" data-signup="dj">${I("disc")} Soy DJ o fotógrafo</button>
+        <button class="btn ghost lg" data-signup="discoteca">${I("build")} Busco talento</button>
+      </div>
+      <div class="trust"><span>${I("check")}Registro gratis</span><span>${I("check")}Sin cuotas mensuales</span><span>${I("check")}Pago seguro con Stripe</span><span>${I("check")}Presskit, rider y comunidad</span></div>
+    </div>
+    <div class="mock" aria-hidden="true">
+      <div class="mcard tilt">
+        <div class="mrow" style="justify-content:space-between"><span class="chip dj">DJ</span><span class="lbl">Sáb · 23:30</span></div>
+        <h3 style="font-size:21px;margin:12px 0 4px">Sesión principal · Sábado techno</h3>
+        <p class="muted" style="font-size:14px">Sala principal · Madrid</p>
+        <div class="mrow" style="margin-top:16px;justify-content:space-between"><span class="muted" style="font-size:14px">12 postulaciones</span><b style="font:800 22px var(--display)">350 €</b></div>
+      </div>
+      <div class="mcard off">
+        <div class="mrow"><div class="mav" style="background:var(--accent)">ML</div><div style="flex:1"><b>Marta Lux</b><div class="muted" style="font-size:13px">Techno · Melodic · 4 años</div></div><b style="font-family:var(--display)">320 €</b></div>
+        <div class="mrow" style="margin-top:14px"><div class="mav" style="background:var(--violet)">DK</div><div style="flex:1"><b>Dekko</b><div class="muted" style="font-size:13px">Tech house · Minimal</div></div><b style="font-family:var(--display)">300 €</b></div>
+        <div style="margin-top:16px" class="btn pri block">Contratar y pagar</div>
+      </div>
+      <div class="toastmock">${I("check")} Bolo cerrado · 288 € para el DJ</div>
+    </div>
+  </div></section>
+
+  <div class="band"><div class="wrap">
+    <div class="it"><b>0 €</b><span>para registrarte y publicar</span></div>
+    <div class="it"><b>10 %</b><span>solo cuando se cierra un bolo</span></div>
+    <div class="it"><b>4 perfiles</b><span>DJs, fotógrafos, promotores y salas</span></div>
+    <div class="it"><b>100 %</b><span>de los pagos dentro de la plataforma</span></div>
+  </div></div>
+
+  <section class="s" id="como"><div class="wrap">
+    <div class="s-head"><span class="lbl">Cómo funciona</span><h2>Tres pasos. Cero llamadas perdidas.</h2><p>Lo mismo que haces hoy por mensajes, pero ordenado, con el dinero asegurado y todo en un panel.</p></div>
+    <div class="seg" role="tablist"><button data-aud="talent" class="${landingAud==="talent"?"on":""}">Para DJs y fotógrafos</button><button data-aud="client" class="${landingAud==="client"?"on":""}">Para salas y promotores</button></div>
+    <div class="steps" id="stepsBox"></div>
+    <div style="margin-top:28px"><button class="btn pri lg" id="stepsCta"></button></div>
+  </div></section>
+
+  <section class="s" id="bolos" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)"><div class="wrap">
+    <div class="s-head"><span class="lbl">En directo</span><h2>Bolos abiertos ahora mismo</h2><p>Esto es lo que se está moviendo. Regístrate para ver el caché, filtrar por tu ciudad y postularte.</p></div>
+    <div class="feed" id="feed"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+  </div></section>
+
+  <section class="s" id="precio"><div class="wrap">
+    <div class="s-head"><span class="lbl">Precio</span><h2>Gratis. Solo ganamos si tú ganas.</h2><p>No hay cuotas ni planes. Cuando una sala contrata y paga, Cabina se queda un 10 % del caché. Si no hay bolo, no hay comisión.</p></div>
+    <div class="price-grid">
+      <div class="calc-card">
+        <div class="kv"><span class="lbl">Caché del bolo</span><b id="cVal">300 €</b></div>
+        <input type="range" id="cRange" min="50" max="2000" step="10" value="300" aria-label="Caché del bolo">
+        <div class="split-bar"><i style="width:90%"></i><s style="width:10%"></s></div>
+        <div class="kv"><span>La sala paga</span><b id="cPay">300 €</b></div>
+        <div class="kv"><span class="muted">Comisión Cabina (10 %)</span><b class="muted" id="cFee">30 €</b></div>
+        <div class="kv big" style="border-top:1px solid var(--line);padding-top:16px"><span>Recibes tú</span><b id="cGet">270 €</b></div>
+      </div>
+      <div class="plan">
+        <span class="lbl">Un único plan</span>
+        <div class="amt">0 €<span style="font-size:20px;color:var(--muted);font-weight:600"> /mes</span></div>
+        <ul>
+          <li>${I("check")}Perfil profesional visible para salas de toda España</li>
+          <li>${I("check")}Postulaciones y bolos ilimitados</li>
+          <li>${I("check")}Cobros garantizados: la sala paga antes del bolo</li>
+          <li>${I("check")}Panel con tus bolos, ingresos y pagos</li>
+          <li>${I("check")}Sube tu presskit y tu rider técnico</li>
+          <li>${I("check")}Comunidad: sigue a salas y artistas y publica tus fechas</li>
+        </ul>
+        <button class="btn pri lg block" data-signup>Crear mi cuenta gratis</button>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="s" style="padding-top:0"><div class="wrap">
+    <div class="s-head"><span class="lbl">Preguntas frecuentes</span><h2>Lo que nos preguntan antes de entrar</h2></div>
+    <div class="faq">
+      <details><summary>¿De verdad es gratis registrarse?</summary><p>Sí. Crear tu perfil, publicar bolos y postularte no cuesta nada. Solo hay una comisión del 10 % sobre el caché cuando un bolo se cierra y se paga.</p></details>
+      <details><summary>¿Cómo cobro como DJ o fotógrafo?</summary><p>Activas tus cobros una vez (tus datos y tu IBAN, gestionado por Stripe). Cuando una sala te contrata, paga por adelantado y el dinero va a tu cuenta con la comisión ya descontada.</p></details>
+      <details><summary>¿Quién paga la comisión?</summary><p>Se descuenta del caché que recibe el artista. La sala paga exactamente el precio que el artista propuso, sin recargos.</p></details>
+      <details><summary>Soy promotor, ¿puedo publicar bolos en varias salas?</summary><p>Sí. Cada bolo lleva su sala y su ciudad, así que puedes gestionar todas tus fiestas desde el mismo panel.</p></details>
+      <details><summary>¿Mis datos bancarios están seguros?</summary><p>Cabina nunca ve ni guarda tus datos bancarios ni los de tu tarjeta. Todo lo gestiona Stripe, la plataforma de pagos que usan millones de empresas.</p></details>
+    </div>
+  </div></section>
+
+  <section class="final"><div class="wrap"><div class="box">
+    <div style="display:grid;gap:16px"><h2>Este finde alguien busca a alguien como tú.</h2><p class="muted" style="font-size:18px">Crea tu perfil en dos minutos. Es gratis.</p></div>
+    <div class="roles">${Object.entries(ROLE_INFO).map(([k,r])=>`<button class="rolebtn" data-signup="${k}"><span class="ic">${I(r.icon)}</span><span><b>${r.t}</b><small>${r.d}</small></span><span class="arr">${I("arr")}</span></button>`).join("")}</div>
+  </div></div></section>
+
+  <footer class="f"><div class="wrap"><a class="logo" href="#inicio" style="font-size:19px"><span class="mk" style="width:22px;height:22px"></span>Cabina</a><span>Talento para la noche · Pagos procesados por Stripe</span></div></footer>`;
+
+  const renderSteps=()=>{
+    $("#stepsBox").innerHTML=STEPS[landingAud].map((s,i)=>`<div class="step"><div class="ic">${I(s[0])}</div><span class="n">PASO ${i+1}</span><h3>${s[1]}</h3><p>${s[2]}</p></div>`).join("");
+    $$("[data-aud]").forEach(b=>b.classList.toggle("on",b.dataset.aud===landingAud));
+    const c=$("#stepsCta"); c.dataset.signup=landingAud==="talent"?"dj":"discoteca";
+    c.innerHTML=(landingAud==="talent"?"Crear mi perfil de artista":"Publicar mi primer bolo")+" "+I("arr");
+  };
+  $$("[data-aud]").forEach(b=>b.onclick=()=>{landingAud=b.dataset.aud;renderSteps();});
+  renderSteps();
+  const upd=()=>{const v=+$("#cRange").value;$("#cVal").textContent=eur(v);$("#cPay").textContent=eur(v);$("#cFee").textContent=eur(v*COMMISSION);$("#cGet").textContent=eur(v*(1-COMMISSION));};
+  $("#cRange").oninput=upd;upd();
+  $$('.lnav nav a').forEach(a=>a.onclick=e=>{const id=a.getAttribute("href").slice(1);if(id==="talento")return;e.preventDefault();document.getElementById(id)?.scrollIntoView({behavior:"smooth"});});
+
+  const {data:evs=[]}=await sb.from("events").select("*, profiles:owner_id(display_name)").eq("status","abierto").gte("event_date",new Date().toISOString()).order("event_date").limit(6);
+  const feed=$("#feed"); if(!feed) return;
+  if(!evs.length){
+    feed.innerHTML=`<div class="empty">${I("cal")}<b>Los primeros bolos están a punto de llegar</b><span>Regístrate ahora y te avisaremos en cuanto se publiquen en tu ciudad.</span><button class="btn pri" data-signup>Crear cuenta gratis</button></div>`;
+    return;
+  }
+  const open=evs.slice(0,3), locked=evs.slice(3);
+  const lockedRows=locked.length?locked:open.slice(0,2);
+  feed.innerHTML=open.map(e=>eventRow(e,{locked:true})).join("")+
+   `<div class="lock"><div class="feed">${lockedRows.map(e=>eventRow(e,{locked:true})).join("")}</div>
+     <div class="gate"><div class="box">${I("lock")}<h3>Ve todos los bolos y su caché</h3><p class="muted">Crea tu cuenta gratis para filtrar por ciudad y postularte.</p><button class="btn pri lg" data-signup>Desbloquear gratis</button></div></div></div>`;
+  $$(".feed > .ev",feed).forEach(b=>b.onclick=()=>openAuth("reg"));
+}
+
+/* ---------- App (con sesión) ---------- */
+function nav(){
+  const t=isTalent();
+  const items=t?[["resumen","home","Resumen"],["comunidad","chat","Comunidad"],["explorar","search","Buscar bolos"],["postulaciones","inbox","Postulaciones"],["contratos","check","Bolos cerrados",true],["cobros","card","Cobros",true],["ajustes","user","Mi perfil",true]]
+              :[["resumen","home","Resumen"],["comunidad","chat","Comunidad"],["mis-bolos","brief","Mis bolos"],["talento","users","Talento"],["contratos","check","Contrataciones",true],["ajustes","user","Mi perfil",true]];
+  return items;
+}
+function shell(active,content){
+  const items=nav();
+  root.innerHTML=`<div class="shell">
+    <aside class="side">
+      <a class="logo" href="#resumen"><span class="mk"></span>Cabina</a>
+      <div class="sec">Menú</div>
+      ${items.map(([k,ic,l,hideM])=>`<a href="#${k}" class="${active===k?"on":""} ${hideM?"hide-m":""}">${I(ic)}<span>${l}</span></a>`).join("")}
+      ${isClient()?`<div class="cta"><a href="#publicar" class="btn pri block" style="justify-content:center;color:var(--accent-ink)">${I("plus")} Publicar bolo</a></div>`:""}
+      ${!isTalent()?``:`<div class="sec">Descubre</div><a href="#talento" class="${active==="talento"?"on":""} hide-m">${I("users")}<span>Talento</span></a>`}
+      <div class="me">${avatar(me.profile)}<div><b>${h(me.profile.display_name)}</b><small>${h(ROLES[me.profile.role])}</small></div><button class="iconbtn" id="logout" title="Cerrar sesión" aria-label="Cerrar sesión">${I("out")}</button></div>
+    </aside>
+    <main class="main"><div class="main-in">
+      <div class="mobtop"><a class="logo" href="#resumen" style="font-size:20px"><span class="mk" style="width:22px;height:22px"></span>Cabina</a>
+        <div style="display:flex;gap:8px">${isClient()?`<a href="#publicar" class="iconbtn" aria-label="Publicar bolo" style="color:var(--accent)">${I("plus")}</a>`:""}<a href="#ajustes" class="iconbtn" aria-label="Mi perfil">${I("user")}</a><button class="iconbtn" id="logoutM" aria-label="Cerrar sesión">${I("out")}</button></div></div>
+      <div class="testbar" style="border-radius:10px;margin-bottom:20px;border:1px solid rgba(255,181,71,.3)">MODO PRUEBAS · Para pagar usa la tarjeta 4242 4242 4242 4242, cualquier fecha futura y cualquier CVC</div>
+      <div id="view">${content||`<div class="skel"></div>`}</div>
+    </div></main></div>`;
+  const lo=async()=>{await sb.auth.signOut();me=null;go("inicio");};
+  $("#logout").onclick=lo;$("#logoutM").onclick=lo;
+  return $("#view");
+}
+
+function completeness(){
+  const p=me.profile, t=isTalent();
+  const items=[
+    ["Nombre y ciudad",!!(p.display_name&&p.city),"ajustes"],
+    ["Foto de perfil",!!p.avatar_url,"ajustes"],
+    [t?"Biografía y estilo":"Descripción de la sala",!!(p.bio&&p.bio.length>20),"ajustes"],
+    ["Instagram",!!p.instagram,"ajustes"],
+  ];
+  if(t){items.push([p.role==="dj"?"Géneros que pinchas":"Especialidades",(p.genres||[]).length>0,"ajustes"]);items.push(["Tarifa orientativa",!!p.rate_eur,"ajustes"]);items.push(["Presskit subido",!!p.presskit_url,"ajustes"]);if(p.role==="dj")items.push(["Rider técnico subido",!!p.rider_url,"ajustes"]);}
+  else items.push([p.role==="discoteca"?"Ficha técnica de la cabina":"Dosier subido",!!(p.role==="discoteca"?p.rider_url:p.presskit_url),"ajustes"]);
+  return items;
+}
+
+async function viewResumen(){
+  const v=shell("resumen");
+  const t=isTalent(); const p=me.profile;
+  const hour=new Date().getHours(); const hi=hour<6?"Buenas noches":hour<14?"Buenos días":hour<21?"Buenas tardes":"Buenas noches";
+  const todos=completeness(); const done=todos.filter(x=>x[1]).length; const pct=Math.round(done/todos.length*100);
+  let kpis="",left="",notice="";
+  if(t){
+    const [{data:apps=[]},{data:bks=[]},recQ]=await Promise.all([
+      sb.from("applications").select("*, events(id,title,event_date,city,status)").eq("talent_id",me.user.id).order("created_at",{ascending:false}),
+      sb.from("bookings").select("*, events(id,title,event_date,city)").eq("talent_id",me.user.id).eq("status","pagado").order("paid_at",{ascending:false}),
+      sb.from("events").select("*, profiles:owner_id(display_name)").eq("status","abierto").eq("role_needed",p.role).gte("event_date",new Date().toISOString()).order("event_date").limit(20)
+    ]);
+    let pay={ready:false,connected:false}; try{pay=await callFn("stripe-connect",{action:"status"});}catch(_){}
+    const applied=new Set(apps.map(a=>a.event_id));
+    let rec=(recQ.data||[]).filter(e=>!applied.has(e.id));
+    const near=rec.filter(e=>p.city&&e.city.toLowerCase().includes(p.city.toLowerCase()));
+    rec=(near.length?near:rec).slice(0,5);
+    const pend=apps.filter(a=>a.status==="pendiente").length;
+    const earned=bks.reduce((s,b)=>s+b.amount_cents-b.fee_cents,0);
+    const upcoming=bks.filter(b=>new Date(b.events.event_date)>new Date());
+    if(!pay.ready) notice=`<div class="notice">${I("card")}<div class="grow"><b>Activa tus cobros para poder ser contratado</b><small>Las salas no pueden pagarte hasta que lo hagas. Son 5 minutos con Stripe.</small></div><a href="#cobros" class="btn pri">Activar cobros</a></div>`;
+    kpis=`<div class="kpis">
+      <div class="kpi hl"><div class="top">Ganado en Cabina ${I("euro")}</div><b>${eurc(earned)}</b><small>neto, ya descontada la comisión</small></div>
+      <div class="kpi"><div class="top">Bolos cerrados ${I("check")}</div><b>${bks.length}</b><small>${upcoming.length} ${upcoming.length===1?"próximo":"próximos"}</small></div>
+      <div class="kpi"><div class="top">Postulaciones activas ${I("inbox")}</div><b>${pend}</b><small>esperando respuesta</small></div>
+      <div class="kpi"><div class="top">Bolos para ti ${I("search")}</div><b>${rec.length}</b><small>${near.length?"en "+h(p.city):"abiertos ahora"}</small></div></div>`;
+    left=`<div class="panel"><div class="panel-h"><h3>Bolos recomendados para ti</h3><a href="#explorar">Ver todos</a></div>
+        <div class="list">${rec.length?rec.map(e=>eventRow(e)).join(""):`<div class="empty">${I("search")}<b>No hay bolos nuevos para ti ahora</b><span>Completa tu perfil: las salas también buscan talento directamente.</span></div>`}</div></div>
+      <div class="panel"><div class="panel-h"><h3>Próximos bolos confirmados</h3><a href="#contratos">Historial</a></div>
+        <div>${upcoming.length?upcoming.slice(0,4).map(b=>`<div class="rowi"><div class="date" style="width:54px;padding:5px 0"><span>${MONTHS[new Date(b.events.event_date).getMonth()]}</span><b style="font-size:20px">${new Date(b.events.event_date).getDate()}</b></div><div class="grow"><b>${h(b.events.title)}</b><small>${h(b.events.city)}</small></div><b style="font-family:var(--display)">${eurc(b.amount_cents-b.fee_cents)}</b></div>`).join(""):`<p class="muted">Cuando te contraten verás aquí tu agenda.</p>`}</div></div>`;
+  }else{
+    const [{data:evs=[]},{data:bks=[]}]=await Promise.all([
+      sb.from("events").select("*, applications(count)").eq("owner_id",me.user.id).order("event_date",{ascending:true}),
+      sb.from("bookings").select("*, events(id,title,event_date,city), talent:talent_id(display_name,avatar_url)").eq("client_id",me.user.id).eq("status","pagado").order("paid_at",{ascending:false})
+    ]);
+    evs.forEach(e=>e.app_count=e.applications?.[0]?.count??0);
+    const open=evs.filter(e=>e.status==="abierto");
+    const totalApps=open.reduce((s,e)=>s+e.app_count,0);
+    const spent=bks.reduce((s,b)=>s+b.amount_cents,0);
+    const needs=open.filter(e=>e.app_count>0);
+    if(!evs.length) notice=`<div class="notice">${I("bolt")}<div class="grow"><b>Publica tu primer bolo</b><small>Es gratis. Los DJs y fotógrafos de tu ciudad empezarán a postularse.</small></div><a href="#publicar" class="btn pri">Publicar bolo</a></div>`;
+    else if(needs.length) notice=`<div class="notice">${I("inbox")}<div class="grow"><b>Tienes ${totalApps} postulaci${totalApps===1?"ón":"ones"} por revisar</b><small>Elige a tu artista y deja el bolo cerrado.</small></div><button class="btn pri" data-ev="${needs[0].id}">Revisar ahora</button></div>`;
+    kpis=`<div class="kpis">
+      <div class="kpi hl"><div class="top">Bolos abiertos ${I("brief")}</div><b>${open.length}</b><small>buscando artista</small></div>
+      <div class="kpi"><div class="top">Postulaciones recibidas ${I("inbox")}</div><b>${totalApps}</b><small>en bolos abiertos</small></div>
+      <div class="kpi"><div class="top">Artistas contratados ${I("check")}</div><b>${bks.length}</b><small>bolos cerrados</small></div>
+      <div class="kpi"><div class="top">Invertido ${I("euro")}</div><b>${eurc(spent)}</b><small>en contrataciones</small></div></div>`;
+    left=`<div class="panel"><div class="panel-h"><h3>Tus bolos abiertos</h3><a href="#mis-bolos">Ver todos</a></div>
+        <div class="list">${open.length?open.slice(0,5).map(e=>eventRow(e)).join(""):`<div class="empty">${I("brief")}<b>No tienes bolos abiertos</b><span>Publica uno y recibe propuestas hoy mismo.</span><a class="btn pri" href="#publicar">${I("plus")} Publicar bolo</a></div>`}</div></div>
+      <div class="panel"><div class="panel-h"><h3>Últimas contrataciones</h3><a href="#contratos">Historial</a></div>
+        <div>${bks.length?bks.slice(0,4).map(b=>`<div class="rowi">${avatar(b.talent)}<div class="grow"><b>${h(b.talent?.display_name)}</b><small>${h(b.events.title)} · ${fshort(b.events.event_date)}</small></div><b style="font-family:var(--display)">${eurc(b.amount_cents)}</b></div>`).join(""):`<p class="muted">Aquí verás a los artistas que contrates.</p>`}</div></div>`;
+  }
+  v.innerHTML=`<div class="ph"><div><h1>${hi}, ${h(p.display_name.split(" ")[0])}</h1><p>${t?"Esto es lo que pasa con tus bolos.":"Así van tus bolos y contrataciones."}</p></div>
+    ${t?`<a href="#explorar" class="btn pri">${I("search")} Buscar bolos</a>`:`<a href="#publicar" class="btn pri">${I("plus")} Publicar bolo</a>`}</div>
+    ${notice}${kpis}
+    <div class="cols"><div class="stack">${left}</div>
+      <div class="stack">
+        <div class="panel"><div class="panel-h"><h3>Tu perfil</h3><span class="calc">${pct} %</span></div>
+          <div class="progress"><div class="bar"><i style="width:${pct}%"></i></div><small class="muted">${pct===100?"Perfil completo. Destacas frente al resto.":t?"Los perfiles completos reciben muchas más contrataciones.":"Un perfil completo da confianza a los artistas."}</small></div>
+          <div class="stack" style="gap:8px">${todos.map(([l,ok,href])=>`<a class="todo ${ok?"done":""}" ${ok?"":`href="#${href}"`}><span class="ck">${ok?I("check"):""}</span>${l}${ok?"":`<span class="arr">${I("arr")}</span>`}</a>`).join("")}</div>
+        </div>
+        <div class="panel"><div class="panel-h"><h3>Tu perfil público</h3></div>
+          <div class="person">${avatar(me.profile)}<div><b>${h(p.display_name)}</b><div class="muted" style="font-size:13.5px">${h(ROLES[p.role])} · ${h(p.city||"sin ciudad")}</div></div></div>
+          <div class="statgrid" id="myStats">${statGrid(null,p.id)}</div>
+          <a class="btn ghost block" href="#perfil-${p.id}">${I("eye")} Ver como lo ven los demás</a></div>
+      </div></div>`;
+  bindEv(v); fillMyStats();
+}
+
+async function viewExplorar(){
+  const v=shell(isTalent()?"explorar":"mis-bolos");
+  const f=filters;
+  let q=sb.from("events").select("*, profiles:owner_id(display_name)").eq("status","abierto").gte("event_date",new Date().toISOString()).order("event_date").limit(60);
+  if(f.city) q=q.ilike("city",`%${f.city}%`);
+  if(f.role) q=q.eq("role_needed",f.role);
+  const {data:evs=[]}=await q;
+  v.innerHTML=`<div class="ph"><div><h1>Buscar bolos</h1><p>${evs.length} bolos abiertos${f.city?` en ${h(f.city)}`:""}.</p></div></div>
+    <form class="toolbar" id="flt">
+      <div class="field grow"><label for="fCity">Ciudad</label><input id="fCity" value="${h(f.city)}" placeholder="Todas las ciudades"></div>
+      <div class="field"><label for="fRole">Buscan</label><select id="fRole"><option value="">Todo</option><option value="dj"${f.role==="dj"?" selected":""}>DJ</option><option value="fotografo"${f.role==="fotografo"?" selected":""}>Fotógrafo/a</option></select></div>
+      <button class="btn">${I("search")} Filtrar</button></form>
+    <div class="list">${evs.length?evs.map(e=>eventRow(e)).join(""):`<div class="empty">${I("search")}<b>No hay bolos con esos filtros</b><span>Prueba con otra ciudad o vuelve en unos días.</span></div>`}</div>`;
+  bindEv(v);
+  $("#flt").onsubmit=e=>{e.preventDefault();filters={city:$("#fCity").value.trim(),role:$("#fRole").value};viewExplorar();};
+}
+
+async function viewMisBolos(){
+  const v=shell("mis-bolos");
+  const {data:evs=[]}=await sb.from("events").select("*, applications(count)").eq("owner_id",me.user.id).order("event_date",{ascending:false});
+  evs.forEach(e=>e.app_count=e.applications?.[0]?.count??0);
+  const groups={abierto:evs.filter(e=>e.status==="abierto"),cerrado:evs.filter(e=>e.status==="cerrado"),cancelado:evs.filter(e=>e.status==="cancelado")};
+  let tab="abierto"; try{tab=sessionStorage.getItem("mbTab")||"abierto";}catch(_){}
+  const render=()=>{
+    v.innerHTML=`<div class="ph"><div><h1>Mis bolos</h1><p>Gestiona tus publicaciones y elige a tus artistas.</p></div><a href="#publicar" class="btn pri">${I("plus")} Publicar bolo</a></div>
+    <div class="tabs">${[["abierto","Abiertos"],["cerrado","Cerrados"],["cancelado","Cancelados"]].map(([k,l])=>`<button data-t="${k}" class="${tab===k?"on":""}">${l} (${groups[k].length})</button>`).join("")}</div>
+    <div class="list">${groups[tab].length?groups[tab].map(e=>eventRow(e)).join(""):`<div class="empty">${I("brief")}<b>Nada por aquí</b>${tab==="abierto"?`<a class="btn pri" href="#publicar">${I("plus")} Publicar bolo</a>`:""}</div>`}</div>`;
+    $$("[data-t]",v).forEach(b=>b.onclick=()=>{tab=b.dataset.t;try{sessionStorage.setItem("mbTab",tab);}catch(_){}render();});
+    bindEv(v);
+  };render();
+}
+
+async function viewPostulaciones(){
+  const v=shell("postulaciones");
+  const {data:as=[]}=await sb.from("applications").select("*, events(*)").eq("talent_id",me.user.id).order("created_at",{ascending:false});
+  v.innerHTML=`<div class="ph"><div><h1>Mis postulaciones</h1><p>${as.filter(a=>a.status==="pendiente").length} esperando respuesta.</p></div><a href="#explorar" class="btn pri">${I("search")} Buscar bolos</a></div>
+  <div class="panel">${as.length?as.map(a=>`<div class="rowi" style="cursor:pointer" data-ev="${a.events.id}"><div class="date" style="width:54px;padding:5px 0"><span>${MONTHS[new Date(a.events.event_date).getMonth()]}</span><b style="font-size:20px">${new Date(a.events.event_date).getDate()}</b></div>
+    <div class="grow"><b>${h(a.events.title)}</b><small>${h(a.events.city)} · tu precio ${eur(a.price_eur)} · recibirías ${eur(a.price_eur*(1-COMMISSION))}</small></div>${stChip(a.status)}</div>`).join("")
+    :`<div class="empty">${I("inbox")}<b>Aún no te has postulado a ningún bolo</b><span>Busca bolos en tu ciudad y envía tu propuesta en un minuto.</span><a class="btn pri" href="#explorar">Buscar bolos</a></div>`}</div>`;
+  $$("[data-ev]",v).forEach(b=>b.onclick=()=>go("evento",b.dataset.ev));
+}
+
+async function viewContratos(){
+  const v=shell("contratos"); const t=isTalent();
+  const {data:bs=[]}=await sb.from("bookings").select("*, events(id,title,event_date,city), client:client_id(display_name,avatar_url), talent:talent_id(display_name,avatar_url)").eq("status","pagado").order("paid_at",{ascending:false});
+  const total=bs.reduce((s,b)=>s+(t?b.amount_cents-b.fee_cents:b.amount_cents),0);
+  const fees=bs.reduce((s,b)=>s+b.fee_cents,0);
+  v.innerHTML=`<div class="ph"><div><h1>${t?"Bolos cerrados":"Contrataciones"}</h1><p>Historial de bolos pagados.</p></div></div>
+  <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+    <div class="kpi hl"><div class="top">${t?"Ingresos netos":"Total invertido"} ${I("euro")}</div><b>${eurc(total)}</b></div>
+    <div class="kpi"><div class="top">Bolos ${I("check")}</div><b>${bs.length}</b></div>
+    <div class="kpi"><div class="top">${t?"Comisiones":"Media por bolo"} ${I("card")}</div><b>${t?eurc(fees):eurc(bs.length?Math.round(total/bs.length):0)}</b></div></div>
+  <div class="panel">${bs.length?bs.map(b=>{const o=t?b.client:b.talent;return `<div class="rowi" style="cursor:pointer" data-ev="${b.events.id}">${avatar(o)}<div class="grow"><b>${h(b.events.title)}</b><small>${t?"para":"con"} ${h(o?.display_name)} · ${fshort(b.events.event_date)} · ${h(b.events.city)}</small></div>
+    <div style="text-align:right"><b style="font-family:var(--display)">${t?eurc(b.amount_cents-b.fee_cents):eurc(b.amount_cents)}</b>${t?`<div class="calc">de ${eurc(b.amount_cents)}</div>`:""}</div></div>`;}).join("")
+    :`<div class="empty">${I("check")}<b>Todavía no hay bolos cerrados</b><span>${t?"Cuando una sala te contrate y pague, aparecerá aquí.":"Cuando contrates a un artista, aparecerá aquí con su justificante."}</span></div>`}</div>`;
+  $$("[data-ev]",v).forEach(b=>b.onclick=()=>go("evento",b.dataset.ev));
+}
+
+async function viewCobros(){
+  const v=shell("cobros");
+  v.innerHTML=`<div class="ph"><div><h1>Cobros</h1><p>Cómo te llega el dinero de tus bolos.</p></div></div><div class="skel"></div>`;
+  let st={connected:false,ready:false},err=null;
+  try{st=await callFn("stripe-connect",{action:"status"});}catch(e){err=e.message;}
+  v.innerHTML=`<div class="ph"><div><h1>Cobros</h1><p>Cómo te llega el dinero de tus bolos.</p></div></div>
+  <div class="cols"><div class="panel">
+    <div class="panel-h"><h3>Cuenta de cobro</h3>${st.ready?`<span class="chip ok"><span class="dot"></span>Activa</span>`:`<span class="chip wait"><span class="dot"></span>${st.connected?"A medias":"Sin activar"}</span>`}</div>
+    <p class="muted">${st.ready?"Todo listo. Cuando una sala te contrate y pague, el dinero llega a tu cuenta bancaria con el 10 % de Cabina ya descontado.":"Para que las salas puedan contratarte necesitas activar los cobros. Stripe te pedirá tus datos y tu IBAN. Cabina nunca ve tus datos bancarios."}</p>
+    ${err?`<p class="calc" style="color:var(--bad)">${h(err)}</p>`:""}
+    <div><button class="btn ${st.ready?"ghost":"pri"}" id="onb">${st.ready?"Actualizar datos de cobro":st.connected?"Terminar de activar":"Activar cobros"} ${I("arr")}</button></div>
+  </div>
+  <div class="panel"><h3>Así funciona</h3>
+    <div class="rowi"><span class="avatar" style="width:34px;height:34px;font-size:13px">1</span><div class="grow"><b>La sala paga al contratarte</b><small>Pago por adelantado con tarjeta.</small></div></div>
+    <div class="rowi"><span class="avatar" style="width:34px;height:34px;font-size:13px">2</span><div class="grow"><b>Stripe separa la comisión</b><small>10 % para Cabina, 90 % para ti.</small></div></div>
+    <div class="rowi"><span class="avatar" style="width:34px;height:34px;font-size:13px">3</span><div class="grow"><b>Lo recibes en tu banco</b><small>Transferencia automática a tu IBAN.</small></div></div>
+  </div></div>`;
+  $("#onb").onclick=async e=>{const b=e.currentTarget;b.disabled=true;b.textContent="Abriendo Stripe…";
+    try{const r=await callFn("stripe-connect",{action:"onboard",return_url:location.origin+location.pathname+"#cobros"});
+      if(r.url){pendingOnboard=true;openStripe(r.url);b.disabled=false;b.textContent="Continuar en Stripe";}
+      else{toast(r.ready?"Cobros activados (cuenta de prueba)":"Cuenta creada. Stripe está revisando los datos.");viewCobros();}}
+    catch(x){toast(x.message,true);b.disabled=false;b.textContent="Activar cobros";}};
+}
+
+function viewAjustes(){
+  const v=shell("ajustes"); const p=me.profile, t=isTalent();
+  v.innerHTML=`<div class="ph"><div><h1>Mi perfil</h1><p>Lo que ven ${t?"las salas y promotores":"los artistas"} cuando entran en tu perfil.</p></div><a class="btn ghost" href="#perfil-${p.id}">${I("eye")} Ver perfil público</a></div>
+  <form class="panel form" id="pf" style="max-width:780px">
+    <div class="split"><div class="person">${avatar(p,"lg")}<div><b style="font-size:18px">${h(p.display_name)}</b><div class="muted">${h(ROLES[p.role])}</div></div></div><div class="statgrid" id="myStats" style="min-width:260px">${statGrid(null,p.id)}</div></div>
+    <div class="grid2"><div class="field"><label for="pName">Nombre</label><input id="pName" value="${h(p.display_name)}" maxlength="80" required></div>
+      <div class="field"><label for="pCity">Ciudad</label><input id="pCity" value="${h(p.city||"")}"></div></div>
+    ${t?`<div class="grid2"><div class="field"><label for="pRate">Tarifa orientativa por bolo (€)</label><input id="pRate" type="number" min="0" step="10" value="${p.rate_eur??""}"></div>
+      <div class="field"><label for="pGenres">${p.role==="dj"?"Géneros":"Especialidades"}</label><input id="pGenres" value="${h((p.genres||[]).join(", "))}" placeholder="${p.role==="dj"?"techno, reggaeton, house":"eventos, retrato, aftermovie"}"><span class="hint">Separados por comas.</span></div></div>`:""}
+    <div class="field"><label for="pIg">Instagram</label><input id="pIg" value="${h(p.instagram||"")}" placeholder="@tuusuario"></div>
+    <div class="field"><label for="pBio">${t?"Sobre ti":"Sobre la sala o promotora"}</label><textarea id="pBio" maxlength="1500" placeholder="${t?"Tu estilo, dónde has pinchado, qué te diferencia…":"Aforo, estilo musical, equipo de la cabina…"}">${h(p.bio||"")}</textarea></div>
+    <div><button class="btn pri">Guardar cambios</button></div></form>
+  <div class="panel" style="max-width:780px;margin-top:18px"><div class="panel-h"><h3>Foto y documentos</h3><span class="calc">PDF o imagen · máx. 15 MB</span></div>
+    <div class="docrow">${avatar(p)}<div class="grow"><b>Foto de perfil</b><small>${p.avatar_url?"Subida":"Sin foto"} · JPG o PNG</small></div>
+      <label class="btn sm ghost">${I("up")} ${p.avatar_url?"Cambiar":"Subir"}<input type="file" accept="image/*" data-up="avatar" hidden></label></div>
+    ${DOCS.map(([k,lt,lo,desc])=>{const url=p[k+"_url"];const label=t?lt:lo;return `<div class="docrow"><span class="docic">${I("file")}</span><div class="grow"><b>${label}</b><small>${url&&/^https:\/\//.test(url)?`<a href="${h(url)}" target="_blank" rel="noopener">Ver archivo</a>`:desc}</small></div>
+      ${url?`<button class="iconbtn" data-del="${k}" aria-label="Quitar ${label}">${I("trash")}</button>`:""}
+      <label class="btn sm ${url?"ghost":"pri"}">${I("up")} ${url?"Reemplazar":"Subir"}<input type="file" accept="application/pdf,image/*" data-up="${k}" hidden></label></div>`;}).join("")}
+  </div>`;
+  fillMyStats();
+  $$("[data-up]",v).forEach(inp=>inp.onchange=async()=>{
+    const f=inp.files[0]; if(!f) return;
+    if(f.size>15*1024*1024) return toast("El archivo pesa más de 15 MB.",true);
+    const kind=inp.dataset.up; const lbl=inp.parentElement; const old=lbl.innerHTML; lbl.firstChild.textContent=""; lbl.childNodes[1].textContent=" Subiendo…";
+    try{const url=await uploadMedia(f,kind);
+      const {error}=await sb.from("profiles").update({[kind+"_url"]:url}).eq("id",me.user.id); if(error) throw error;
+      await loadMe(); toast(kind==="avatar"?"Foto actualizada":"Archivo subido"); viewAjustes();}
+    catch(x){toast("No se ha podido subir: "+x.message,true);lbl.innerHTML=old;}
+  });
+  $$("[data-del]",v).forEach(b=>b.onclick=async()=>{const k=b.dataset.del;
+    const {error}=await sb.from("profiles").update({[k+"_url"]:null}).eq("id",me.user.id);
+    if(error) return toast(error.message,true); await loadMe(); toast("Archivo quitado"); viewAjustes();});
+  $("#pf").onsubmit=async e=>{e.preventDefault();
+    const upd={display_name:$("#pName").value.trim(),city:$("#pCity").value.trim()||null,instagram:$("#pIg").value.trim()||null,bio:$("#pBio").value.trim()||null};
+    if(upd.display_name.length<2) return toast("El nombre necesita al menos 2 letras.",true);
+    if(t){upd.rate_eur=$("#pRate").value?Math.round(+$("#pRate").value):null;upd.genres=$("#pGenres").value.split(",").map(s=>s.trim()).filter(Boolean).slice(0,12);}
+    const {error}=await sb.from("profiles").update(upd).eq("id",me.user.id);
+    if(error) return toast("No se ha podido guardar: "+error.message,true);
+    await loadMe(); toast("Perfil guardado"); viewAjustes();};
+}
+
+function viewPublicar(){
+  const v=shell("publicar");
+  const tm=new Date(Date.now()+86400000*3);tm.setHours(23,30,0,0);
+  const local=new Date(tm.getTime()-tm.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  v.innerHTML=`<button class="back" onclick="history.back()">${I("left")} Volver</button>
+  <div class="ph"><div><h1>Publicar un bolo</h1><p>Gratis. Los artistas de tu ciudad lo verán al momento.</p></div></div>
+  <div class="cols"><form class="panel form" id="evf">
+    <div class="field"><label>¿A quién buscas?</label><div class="roles4" style="grid-template-columns:1fr 1fr">
+      ${["dj","fotografo"].map((k,i)=>`<button type="button" class="rolec${i===0?" on":""}" data-need="${k}"><span class="tick">${I("check")}</span><span class="ic">${I(ROLE_INFO[k].icon)}</span><b>${ROLE_INFO[k].t}</b></button>`).join("")}</div></div>
+    <div class="field"><label for="eTitle">Título del bolo</label><input id="eTitle" maxlength="120" placeholder="Sábado techno · warm-up de 00:00 a 02:00" required></div>
+    <div class="grid2"><div class="field"><label for="eDate">Fecha y hora</label><input id="eDate" type="datetime-local" value="${local}" required></div>
+      <div class="field"><label for="eBudget">Presupuesto orientativo (€)</label><input id="eBudget" type="number" min="0" step="10" placeholder="300"></div></div>
+    <div class="grid2"><div class="field"><label for="eVenue">Sala</label><input id="eVenue" value="${me.profile.role==="discoteca"?h(me.profile.display_name):""}"></div>
+      <div class="field"><label for="eCity">Ciudad</label><input id="eCity" value="${h(me.profile.city||"")}" required></div></div>
+    <div class="field"><label for="eDesc">Detalles</label><textarea id="eDesc" maxlength="3000" placeholder="Horario, estilo musical, equipo de cabina, aforo, entregables si son fotos…"></textarea></div>
+    <div><button class="btn pri lg">Publicar bolo</button></div></form>
+    <div class="panel"><h3>Consejos para recibir más propuestas</h3>
+      <div class="rowi">${I("star")}<div class="grow"><b>Pon presupuesto</b><small>Los bolos con caché indicado reciben más postulaciones.</small></div></div>
+      <div class="rowi">${I("disc")}<div class="grow"><b>Define el estilo</b><small>Género, horario y si es apertura o sesión principal.</small></div></div>
+      <div class="rowi">${I("shield")}<div class="grow"><b>Pago seguro</b><small>Solo pagas cuando eliges al artista. Publicar no cuesta nada.</small></div></div></div></div>`;
+  let need="dj";
+  $$("[data-need]",v).forEach(b=>b.onclick=()=>{need=b.dataset.need;$$("[data-need]",v).forEach(x=>x.classList.toggle("on",x===b));});
+  $("#evf").onsubmit=async e=>{e.preventDefault();
+    const row={owner_id:me.user.id,title:$("#eTitle").value.trim(),role_needed:need,event_date:new Date($("#eDate").value).toISOString(),venue_name:$("#eVenue").value.trim()||null,city:$("#eCity").value.trim(),budget_eur:$("#eBudget").value?Math.round(+$("#eBudget").value):null,description:$("#eDesc").value.trim()||null};
+    if(row.title.length<3) return toast("El título necesita al menos 3 caracteres.",true);
+    if(!row.city) return toast("Indica la ciudad del bolo.",true);
+    if(new Date(row.event_date)<new Date()) return toast("La fecha tiene que ser futura.",true);
+    const {data,error}=await sb.from("events").insert(row).select().single();
+    if(error) return toast("No se ha podido publicar: "+error.message,true);
+    toast("Bolo publicado"); go("evento",data.id);};
+}
+
+async function viewEvento(id){
+  const v=me?shell(isTalent()?"explorar":"mis-bolos"):publicShell();
+  const {data:e}=await sb.from("events").select("*, profiles:owner_id(id,display_name,role,city,avatar_url)").eq("id",id).single();
+  if(!e){v.innerHTML=`<div class="empty">${I("x")}<b>Este bolo ya no existe</b></div>`;return;}
+  const mine=me&&e.owner_id===me.user.id;
+  let side="";
+  if(mine){
+    const [{data:apps=[]},{data:bk=[]}]=await Promise.all([
+      sb.from("applications").select("*, profiles:talent_id(id,display_name,role,city,genres,avatar_url)").eq("event_id",id).order("created_at"),
+      sb.from("bookings").select("*").eq("event_id",id).eq("status","pagado")]);
+    side=`<div class="panel"><div class="panel-h"><h3>Postulaciones (${apps.length})</h3>${e.status==="abierto"?`<button class="btn sm ghost" id="cancelEv">Cancelar bolo</button>`:""}</div>
+      ${bk.length?`<div class="notice" style="margin:0">${I("check")}<div class="grow"><b>Bolo cerrado y pagado</b><small>${eurc(bk[0].amount_cents)}</small></div></div>`:""}
+      ${apps.length?apps.map(a=>`<div class="rowi" style="align-items:flex-start;flex-wrap:wrap">
+        <a class="person" href="#perfil-${a.profiles.id}" style="color:inherit;text-decoration:none;flex:1;min-width:0">${avatar(a.profiles)}<div><b>${h(a.profiles.display_name)}</b><div class="muted" style="font-size:13px">${h(a.profiles.city||"")}${(a.profiles.genres||[]).length?" · "+h(a.profiles.genres.slice(0,3).join(", ")):""}</div></div></a>
+        <b style="font:700 20px var(--display)">${eur(a.price_eur)}</b>
+        ${a.message?`<p class="muted" style="width:100%;font-size:14.5px">${h(a.message)}</p>`:""}
+        <div style="width:100%">${a.status==="pendiente"&&e.status==="abierto"?`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri sm" data-hire="${a.id}">Contratar y pagar ${eur(a.price_eur)}</button><button class="btn sm ghost" data-rej="${a.id}">Descartar</button></div>`:stChip(a.status)}</div>
+      </div>`).join(""):`<div class="empty">${I("inbox")}<b>Aún no hay postulaciones</b><span>Suelen llegar en las primeras horas. Mientras, puedes buscar en Talento.</span><a class="btn ghost sm" href="#talento">Ver talento</a></div>`}</div>`;
+  }else if(!me){
+    side=`<div class="panel" style="text-align:center;justify-items:center">${I("lock")}<h3>¿Te interesa este bolo?</h3><p class="muted">Crea tu perfil gratis para ver el caché y postularte con tu precio.</p><button class="btn pri lg block" data-signup="${h(e.role_needed)}">Regístrate gratis</button><button class="btn ghost block" data-login>Ya tengo cuenta</button></div>`;
+  }else if(isTalent()){
+    const {data:ma}=await sb.from("applications").select("*").eq("event_id",id).eq("talent_id",me.user.id).maybeSingle();
+    if(ma) side=`<div class="panel"><div class="panel-h"><h3>Tu postulación</h3>${stChip(ma.status)}</div><div class="kv"><span>Tu precio</span><b>${eur(ma.price_eur)}</b></div><div class="kv"><span class="muted">Recibirías</span><b>${eur(ma.price_eur*(1-COMMISSION))}</b></div>${ma.status==="pendiente"?`<button class="btn sm ghost" id="withdraw">Retirar postulación</button>`:""}</div>`;
+    else if(e.status!=="abierto") side=`<div class="panel"><h3>Bolo cerrado</h3><p class="muted">Ya no admite postulaciones.</p></div>`;
+    else if(e.role_needed!==me.profile.role) side=`<div class="panel"><h3>Buscan ${h(ROLES[e.role_needed])}</h3><p class="muted">Este bolo es para otro tipo de perfil.</p></div>`;
+    else side=`<form class="panel form" id="applyF"><h3>Postúlate</h3>
+      <div class="field"><label for="apPrice">Tu precio (€)</label><input id="apPrice" type="number" min="20" max="50000" step="5" value="${e.budget_eur||me.profile.rate_eur||""}" required></div>
+      <div class="calc" id="apCalc"></div>
+      <div class="field"><label for="apMsg">Mensaje para el organizador</label><textarea id="apMsg" maxlength="1500" placeholder="Tu estilo, experiencia y enlaces a tus sets o portfolio…"></textarea></div>
+      <button class="btn pri lg block">Enviar postulación</button></form>`;
+  }else side=`<div class="panel"><h3>Bolo de otro organizador</h3><p class="muted">Solo DJs y fotógrafos pueden postularse.</p></div>`;
+
+  v.innerHTML=`<button class="back" onclick="history.length>1?history.back():go('${me?"resumen":"inicio"}')">${I("left")} Volver</button>
+  <div class="detail"><div class="stack" style="gap:20px">
+    <div class="tags">${chip(e.role_needed)}${stChip(e.status)}</div>
+    <h1 style="font-size:clamp(30px,4.5vw,46px);font-weight:800">${h(e.title)}</h1>
+    <div class="facts">
+      <div><span class="lbl">Cuándo</span><span>${h(fdate(e.event_date))}</span></div>
+      <div><span class="lbl">Dónde</span><span>${h(e.venue_name||"Por confirmar")}, ${h(e.city)}</span></div>
+      <div><span class="lbl">Presupuesto</span><span>${!me?`<span class="muted" style="display:inline-flex;gap:6px;align-items:center">${I("lock")} Regístrate para verlo</span>`:e.budget_eur?eur(e.budget_eur):"A convenir"}</span></div>
+      <div><span class="lbl">Organiza</span><span><a href="#perfil-${e.profiles.id}">${h(e.profiles.display_name)}</a> · ${h(ROLES[e.profiles.role])}</span></div>
+    </div>
+    ${e.description?`<div class="panel"><h3>Detalles</h3><p style="white-space:pre-wrap;max-width:65ch;color:var(--fg-2)">${h(e.description)}</p></div>`:""}
+  </div>${side}</div>`;
+
+  const pr=$("#apPrice");if(pr){const u=()=>{const x=+pr.value||0;$("#apCalc").textContent=x?`Recibirías ${eur(x*(1-COMMISSION))} · comisión Cabina ${eur(x*COMMISSION)}`:"";};pr.oninput=u;u();}
+  $("#applyF")?.addEventListener("submit",async ev=>{ev.preventDefault();const price=Math.round(+$("#apPrice").value);
+    if(!(price>=20)) return toast("El precio mínimo es 20 €.",true);
+    const {error}=await sb.from("applications").insert({event_id:id,talent_id:me.user.id,price_eur:price,message:$("#apMsg").value.trim()||null});
+    if(error) return toast("No se ha podido enviar. ¿Ya te habías postulado?",true);
+    toast("Postulación enviada");viewEvento(id);});
+  $("#withdraw")?.addEventListener("click",async()=>{const {error}=await sb.from("applications").delete().eq("event_id",id).eq("talent_id",me.user.id);if(error)return toast(error.message,true);toast("Postulación retirada");viewEvento(id);});
+  $("#cancelEv")?.addEventListener("click",async ev=>{const b=ev.currentTarget;if(b.dataset.sure!=="1"){b.dataset.sure="1";b.textContent="Pulsa otra vez para confirmar";return;}
+    const {error}=await sb.rpc("cancel_event",{ev_id:id});if(error)return toast(error.message,true);toast("Bolo cancelado");viewEvento(id);});
+  $$("[data-rej]",v).forEach(b=>b.onclick=async()=>{const {error}=await sb.rpc("reject_application",{app_id:b.dataset.rej});if(error)return toast(error.message,true);viewEvento(id);});
+  $$("[data-hire]",v).forEach(b=>b.onclick=async()=>{const txt=b.textContent;b.disabled=true;b.textContent="Abriendo pago seguro…";
+    try{const r=await callFn("bookings",{application_id:b.dataset.hire,return_url:location.origin+location.pathname+"#evento-"+id});
+      pendingBooking=r.booking_id;openStripe(r.url);b.disabled=false;b.textContent=txt;}
+    catch(x){toast(x.message,true);b.disabled=false;b.textContent=txt;}});
+}
+
+function publicShell(){
+  root.innerHTML=`<header class="lnav"><div class="wrap"><a class="logo" href="#inicio"><span class="mk"></span>Cabina</a><nav><a href="#inicio">Inicio</a><a href="#talento">Talento</a></nav>
+    <div class="acts"><button class="btn ghost sm" data-login>Entrar</button><button class="btn pri sm" data-signup>Regístrate gratis</button></div></div></header>
+    <main class="wrap" style="padding-top:32px;padding-bottom:80px"><div id="view"><div class="skel"></div></div></main>`;
+  return $("#view");
+}
+
+async function viewTalento(){
+  const v=me?shell("talento"):publicShell();
+  const f=filters;
+  let q=sb.from("profiles").select("*").in("role",TALENT).order("created_at",{ascending:false}).limit(60);
+  if(f.city) q=q.ilike("city",`%${f.city}%`);
+  if(f.role) q=q.eq("role",f.role);
+  const {data:ps=[]}=await q;
+  await loadStats(ps.map(p=>p.id));
+  v.innerHTML=`<div class="ph"><div><h1>Talento</h1><p>DJs y fotógrafos listos para tu próxima fiesta.</p></div>${isClient()?`<a href="#publicar" class="btn pri">${I("plus")} Publicar bolo</a>`:!me?`<button class="btn pri" data-signup="dj">Aparecer aquí gratis</button>`:""}</div>
+  <form class="toolbar" id="flt">
+    <div class="field grow"><label for="fCity">Ciudad</label><input id="fCity" value="${h(f.city)}" placeholder="Todas las ciudades"></div>
+    <div class="field"><label for="fRole">Perfil</label><select id="fRole"><option value="">Todos</option><option value="dj"${f.role==="dj"?" selected":""}>DJ</option><option value="fotografo"${f.role==="fotografo"?" selected":""}>Fotógrafo/a</option></select></div>
+    <button class="btn">${I("search")} Filtrar</button></form>
+  <div class="cards">${ps.length?ps.map(p=>`<a class="tcard" href="#perfil-${p.id}">
+    <div class="person">${avatar(p)}<div><h3 style="font-size:18px">${h(p.display_name)}</h3><div class="muted" style="font-size:14px;display:flex;gap:4px;align-items:center">${I("pin")}${h(p.city||"Sin ciudad")}</div></div></div>
+    <div class="tags">${chip(p.role)}${(p.genres||[]).slice(0,3).map(g=>`<span class="tag">${h(g)}</span>`).join("")}</div>
+    ${p.rate_eur?`<div class="calc">Desde ${eur(p.rate_eur)} por bolo</div>`:""}${miniStats(ST[p.id])}</a>`).join("")
+    :`<div class="empty" style="grid-column:1/-1">${I("users")}<b>Aún no hay perfiles con esos filtros</b>${!me?`<button class="btn pri" data-signup="dj">Sé el primero</button>`:""}</div>`}</div>`;
+  $("#flt").onsubmit=e=>{e.preventDefault();filters={city:$("#fCity").value.trim(),role:$("#fRole").value};viewTalento();};
+}
+
+async function viewPerfil(id){
+  const v=me?shell(id===me.user.id?"ajustes":"comunidad"):publicShell();
+  const [{data:p},fs,fg,{data:posts=[]},mine]=await Promise.all([
+    sb.from("profiles").select("*").eq("id",id).single(),
+    sb.from("profile_stats").select("*").eq("id",id).maybeSingle(),
+    Promise.resolve(null),
+    sb.from("posts").select(POST_SEL).eq("author_id",id).order("created_at",{ascending:false}).limit(20),
+    me&&me.user.id!==id?sb.from("follows").select("follower_id").eq("follower_id",me.user.id).eq("following_id",id).maybeSingle():Promise.resolve({data:null})
+  ]);
+  if(!p){v.innerHTML=`<div class="empty">${I("user")}<b>Perfil no encontrado</b></div>`;return;}
+  const isMe=me&&me.user.id===id; const following=!!mine.data;
+  const st=fs.data||{followers:0,following:0,posts:0};
+  let extra="";
+  if(!TALENT.includes(p.role)){
+    const {data:evs=[]}=await sb.from("events").select("*").eq("owner_id",id).eq("status","abierto").order("event_date");
+    extra=`<div class="panel"><h3>Bolos abiertos</h3><div class="list">${evs.length?evs.map(e=>eventRow(e,{locked:!me})).join(""):`<p class="muted">Sin bolos abiertos ahora mismo.</p>`}</div></div>`;
+  }
+  const ig=(p.instagram||"").replace(/^@/,"").replace(/^https?:\/\/(www\.)?instagram\.com\//,"").replace(/[^A-Za-z0-9._]/g,"");
+  v.innerHTML=`<button class="back" onclick="history.back()">${I("left")} Volver</button>
+  <div class="detail"><div class="stack" style="gap:20px">
+    <div class="person" style="gap:18px">${avatar(p,"lg")}<div><h1 style="font-size:clamp(30px,4.5vw,44px);font-weight:800">${h(p.display_name)}</h1><div class="muted" style="display:flex;gap:6px;align-items:center;margin-top:6px">${I("pin")}${h(p.city||"")}</div></div></div>
+    <div class="social"><button class="statbtn" data-people="followers" data-pid="${p.id}"><b id="fCount">${st.followers}</b> seguidores</button><button class="statbtn" data-people="following" data-pid="${p.id}"><b>${st.following}</b> siguiendo</button><span><b>${st.posts}</b> publicaciones</span>
+      ${isMe?`<a class="btn sm ghost" href="#ajustes">Editar perfil</a>`:me?`<button class="btn sm ${following?"ghost":"pri"}" id="followBtn" data-on="${following?1:0}">${following?"Siguiendo":I("userplus")+" Seguir"}</button>`:`<button class="btn sm pri" data-signup>${I("userplus")} Seguir</button>`}</div>
+    <div class="tags">${chip(p.role)}${(p.genres||[]).map(g=>`<span class="tag">${h(g)}</span>`).join("")}</div>
+    ${p.bio?`<div class="panel"><h3>Sobre ${TALENT.includes(p.role)?"mí":"nosotros"}</h3><p style="white-space:pre-wrap;max-width:65ch;color:var(--fg-2)">${h(p.bio)}</p></div>`:""}
+    ${extra}
+    <div class="stack"><h3>Publicaciones</h3>${posts.length?posts.map(postCard).join(""):`<p class="muted">Todavía no ha publicado nada.</p>`}</div>
+  </div><div class="panel">
+    ${p.rate_eur?`<div><span class="lbl">Tarifa orientativa</span><div style="font:800 32px var(--display);margin-top:8px">Desde ${eur(p.rate_eur)}</div></div>`:""}
+    ${DOCS.filter(([k])=>/^https:\/\//.test(p[k+"_url"]||"")).map(([k,lt,lo])=>`<a class="btn ghost block" href="${h(p[k+"_url"])}" target="_blank" rel="noopener" style="justify-content:flex-start">${I("file")} ${TALENT.includes(p.role)?lt:lo}</a>`).join("")}
+    ${ig?`<a class="btn ghost block" href="https://instagram.com/${ig}" target="_blank" rel="noopener">@${h(ig)} en Instagram</a>`:""}
+    ${!me?`<button class="btn pri block" data-signup="discoteca">Contratar en Cabina</button>`:isClient()&&TALENT.includes(p.role)?`<a class="btn pri block" href="#publicar">Publicar un bolo para contratar</a>`:""}
+    <p class="muted" style="font-size:13px">En Cabina en ${new Date(p.created_at).toLocaleDateString("es-ES",{month:"long",year:"numeric"})}</p>
+  </div></div>`;
+  bindEv(v); bindPosts(v,()=>viewPerfil(id));
+  $("#followBtn")?.addEventListener("click",async e=>{const b=e.currentTarget;b.disabled=true;
+    const on=b.dataset.on==="1"; const ok=await toggleFollow(id,on); b.disabled=false; if(!ok) return;
+    b.dataset.on=on?"0":"1"; b.className="btn sm "+(on?"pri":"ghost"); b.innerHTML=on?I("userplus")+" Seguir":"Siguiendo";
+    const c=$("#fCount"); c.textContent=String(+c.textContent+(on?-1:1));});
+}
+
+/* ---------- Comunidad ---------- */
+const DOCS=[["presskit","Presskit","Dosier de la sala o promotora","Tu presentación: bio, fotos, logos y enlaces"],["rider","Rider técnico","Ficha técnica de la cabina","Equipo que necesitas en cabina (CDJ, mesa, monitores…)"]];
+const POST_SEL="*, author:author_id(id,display_name,role,avatar_url), post_likes(user_id)";
+const ST={};
+async function loadStats(ids){
+  if(!ids.length) return ST;
+  const {data=[]}=await sb.from("profile_stats").select("*").in("id",ids);
+  (data||[]).forEach(r=>ST[r.id]=r); return ST;
+}
+const nfmt=n=>new Intl.NumberFormat("es-ES",{notation:n>=10000?"compact":"standard"}).format(n||0);
+function miniStats(st){
+  if(!st) return "";
+  return `<div class="ministats"><span><b>${nfmt(st.followers)}</b> seguidores</span><span><b>${nfmt(st.following)}</b> siguiendo</span><span><b>${nfmt(st.posts)}</b> publ.</span></div>`;
+}
+function statGrid(st,id){
+  const v=k=>st?nfmt(st[k]):"–";
+  return `<button class="stat" data-people="followers" data-pid="${id}"><b>${v("followers")}</b><span>Seguidores</span></button>
+    <button class="stat" data-people="following" data-pid="${id}"><b>${v("following")}</b><span>Siguiendo</span></button>
+    <a class="stat" href="#perfil-${id}"><b>${v("posts")}</b><span>Publicaciones</span></a>`;
+}
+async function fillMyStats(){
+  const el=document.getElementById("myStats"); if(!el||!me) return;
+  await loadStats([me.user.id]); if(el.isConnected) el.innerHTML=statGrid(ST[me.user.id],me.user.id);
+}
+async function openPeople(id,type){
+  const d=$("#listDlg"), b=$("#listBody");
+  const title=type==="followers"?"Seguidores":"Siguiendo";
+  b.innerHTML=`<div class="dlg-h"><h2 id="listTitle">${title}</h2><button class="iconbtn" data-closel aria-label="Cerrar">${I("x")}</button></div><div class="skel"></div>`;
+  b.querySelector("[data-closel]").onclick=()=>d.close();
+  if(!d.open) d.showModal();
+  const col=type==="followers"?"following_id":"follower_id";
+  const emb=type==="followers"?"person:follower_id(id,display_name,role,city,avatar_url)":"person:following_id(id,display_name,role,city,avatar_url)";
+  const {data=[],error}=await sb.from("follows").select(emb).eq(col,id).order("created_at",{ascending:false}).limit(200);
+  const people=(data||[]).map(r=>r.person).filter(Boolean);
+  b.innerHTML=`<div class="dlg-h"><h2 id="listTitle">${title} · ${people.length}</h2><button class="iconbtn" data-closel aria-label="Cerrar">${I("x")}</button></div>
+    <div class="peoplelist">${error?`<p class="muted">No se ha podido cargar la lista.</p>`:people.length?people.map(p=>`<a class="rowi" href="#perfil-${p.id}" data-closel style="color:inherit;text-decoration:none">${avatar(p)}<div class="grow"><b>${h(p.display_name)}</b><small>${h(ROLES[p.role]||"")}${p.city?" · "+h(p.city):""}</small></div>${I("arr")}</a>`).join("")
+      :`<div class="empty">${I("users")}<b>${type==="followers"?"Todavía no le sigue nadie":"Todavía no sigue a nadie"}</b></div>`}</div>`;
+  $$("[data-closel]",b).forEach(x=>x.addEventListener("click",()=>d.close()));
+}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-people]");if(t){e.preventDefault();openPeople(t.dataset.pid,t.dataset.people);}});
+let comTab="todo";
+function ago(d){const s=(Date.now()-new Date(d))/1000;if(s<60)return"ahora";if(s<3600)return`hace ${Math.floor(s/60)} min`;if(s<86400)return`hace ${Math.floor(s/3600)} h`;if(s<604800)return`hace ${Math.floor(s/86400)} d`;return fshort(d);}
+async function uploadMedia(file,kind){
+  const ext=(file.name.split(".").pop()||"bin").toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,5)||"bin";
+  const path=kind==="post"?`${me.user.id}/posts/${crypto.randomUUID()}.${ext}`:`${me.user.id}/${kind}-${Date.now()}.${ext}`;
+  const {error}=await sb.storage.from("media").upload(path,file,{upsert:true,contentType:file.type||undefined});
+  if(error) throw error;
+  return sb.storage.from("media").getPublicUrl(path).data.publicUrl;
+}
+async function toggleFollow(id,isOn){
+  if(!me){openAuth("reg");return false;}
+  const {error}=isOn?await sb.from("follows").delete().eq("follower_id",me.user.id).eq("following_id",id)
+                   :await sb.from("follows").insert({follower_id:me.user.id,following_id:id});
+  if(error){toast("No se ha podido actualizar: "+error.message,true);return false;}
+  toast(isOn?"Has dejado de seguir":"Ahora sigues a este perfil");return true;
+}
+function postCard(p){
+  const likes=(p.post_likes||[]).length; const liked=me&&(p.post_likes||[]).some(l=>l.user_id===me.user.id);
+  const a=p.author||{};
+  return `<article class="post" data-post="${p.id}">
+    <div class="post-h"><a class="person" href="#perfil-${a.id}" style="color:inherit;text-decoration:none;min-width:0">${avatar(a)}<div><b>${h(a.display_name)}</b><small class="muted">${h(ROLES[a.role]||"")} · ${ago(p.created_at)}</small></div></a>
+      ${me&&a.id===me.user.id?`<button class="iconbtn" data-delpost="${p.id}" aria-label="Borrar publicación">${I("trash")}</button>`:""}</div>
+    <p class="post-b">${h(p.body)}</p>
+    ${p.image_url&&/^https:\/\//.test(p.image_url)?`<img class="post-img" src="${h(p.image_url)}" alt="" loading="lazy">`:""}
+    <div class="post-f"><button class="likebtn${liked?" on":""}" data-like="${p.id}" data-on="${liked?1:0}" aria-label="Me gusta">${I("heart")}<span>${likes}</span></button></div>
+  </article>`;
+}
+function bindPosts(r,reload){
+  $$("[data-like]",r).forEach(b=>b.onclick=async()=>{
+    if(!me) return openAuth("reg");
+    const on=b.dataset.on==="1", id=b.dataset.like; b.disabled=true;
+    const {error}=on?await sb.from("post_likes").delete().eq("post_id",id).eq("user_id",me.user.id):await sb.from("post_likes").insert({post_id:id,user_id:me.user.id});
+    b.disabled=false; if(error) return toast(error.message,true);
+    b.dataset.on=on?"0":"1"; b.classList.toggle("on",!on); const s=b.querySelector("span"); s.textContent=String(+s.textContent+(on?-1:1));});
+  $$("[data-delpost]",r).forEach(b=>b.onclick=async()=>{
+    if(b.dataset.sure!=="1"){b.dataset.sure="1";b.style.color="var(--bad)";b.title="Pulsa otra vez para borrar";toast("Pulsa otra vez la papelera para borrar");return;}
+    const {error}=await sb.from("posts").delete().eq("id",b.dataset.delpost); if(error) return toast(error.message,true); toast("Publicación borrada"); reload();});
+}
+async function viewComunidad(){
+  const v=shell("comunidad");
+  const tabs=[["todo","Para ti"],["siguiendo","Siguiendo"],["buscar","Buscar gente"]];
+  const head=`<div class="ph"><div><h1>Comunidad</h1><p>Sigue a DJs, fotógrafos, salas y promotores. Comparte tus fechas y tu trabajo.</p></div></div>
+    <div class="tabs">${tabs.map(([k,l])=>`<button data-ct="${k}" class="${comTab===k?"on":""}">${l}</button>`).join("")}</div>`;
+  const bindTabs=()=>$$("[data-ct]",v).forEach(b=>b.onclick=()=>{comTab=b.dataset.ct;viewComunidad();});
+  if(comTab==="buscar"){
+    v.innerHTML=head+`<form class="toolbar" id="srch"><div class="field grow"><label for="sQ">Nombre o ciudad</label><input id="sQ" placeholder="Busca DJs, salas, fotógrafos…" autocomplete="off"></div>
+      <div class="field"><label for="sR">Tipo</label><select id="sR"><option value="">Todos</option>${Object.entries(ROLES).map(([k,l])=>`<option value="${k}">${l}</option>`).join("")}</select></div><button class="btn">${I("search")} Buscar</button></form><div id="sRes" class="cards"></div>`;
+    bindTabs();
+    const run=async()=>{
+      const q=$("#sQ").value.trim().replace(/[%,()]/g," "), r=$("#sR").value;
+      let qq=sb.from("profiles").select("*").neq("id",me.user.id).order("created_at",{ascending:false}).limit(40);
+      if(q) qq=qq.or(`display_name.ilike.%${q}%,city.ilike.%${q}%`);
+      if(r) qq=qq.eq("role",r);
+      const [{data:ps=[]},{data:fl=[]}]=await Promise.all([qq,sb.from("follows").select("following_id").eq("follower_id",me.user.id)]);
+      const set=new Set(fl.map(x=>x.following_id));
+      await loadStats(ps.map(p=>p.id));
+      $("#sRes").innerHTML=ps.length?ps.map(p=>`<div class="tcard"><a class="person" href="#perfil-${p.id}" style="color:inherit;text-decoration:none">${avatar(p)}<div><h3 style="font-size:17px">${h(p.display_name)}</h3><div class="muted" style="font-size:13.5px">${h(p.city||"")}</div></div></a>
+        <div class="tags">${chip(p.role)}${(p.genres||[]).slice(0,2).map(g=>`<span class="tag">${h(g)}</span>`).join("")}</div>
+        ${miniStats(ST[p.id])}<button class="btn sm ${set.has(p.id)?"ghost":"pri"}" data-fol="${p.id}" data-on="${set.has(p.id)?1:0}">${set.has(p.id)?"Siguiendo":I("userplus")+" Seguir"}</button></div>`).join("")
+        :`<div class="empty" style="grid-column:1/-1">${I("search")}<b>No hay nadie con esa búsqueda</b><span>Prueba con otro nombre o ciudad.</span></div>`;
+      $$("[data-fol]",v).forEach(b=>b.onclick=async()=>{const on=b.dataset.on==="1";b.disabled=true;const ok=await toggleFollow(b.dataset.fol,on);b.disabled=false;if(!ok)return;
+        b.dataset.on=on?"0":"1";b.className="btn sm "+(on?"pri":"ghost");b.innerHTML=on?I("userplus")+" Seguir":"Siguiendo";});
+    };
+    $("#srch").onsubmit=e=>{e.preventDefault();run();};
+    let tmo; $("#sQ").oninput=()=>{clearTimeout(tmo);tmo=setTimeout(run,300);};
+    run(); setTimeout(()=>$("#sQ")?.focus(),50); return;
+  }
+  let q=sb.from("posts").select(POST_SEL).order("created_at",{ascending:false}).limit(50);
+  let followIds=null;
+  if(comTab==="siguiendo"){
+    const {data:fl=[]}=await sb.from("follows").select("following_id").eq("follower_id",me.user.id);
+    followIds=fl.map(x=>x.following_id); q=q.in("author_id",[...followIds,me.user.id]);
+  }
+  const [{data:posts=[]},{data:sug=[]}]=await Promise.all([q,sb.from("profiles").select("*").neq("id",me.user.id).order("created_at",{ascending:false}).limit(8)]);
+  const {data:myF=[]}=await sb.from("follows").select("following_id").eq("follower_id",me.user.id);
+  const fset=new Set(myF.map(x=>x.following_id));
+  const sugg=sug.filter(p=>!fset.has(p.id)).slice(0,5);
+  v.innerHTML=head+`<div class="cols"><div class="stack">
+    <form class="panel composer" id="cmp">
+      <div class="person">${avatar(me.profile)}<textarea id="cBody" maxlength="1000" placeholder="${isTalent()?"¿Dónde pinchas este finde? Comparte un set, una fecha, una foto…":"Anuncia tus fiestas, line-ups o lo que buscas…"}"></textarea></div>
+      <img id="cPrev" class="post-img" alt="" hidden>
+      <div class="cmp-f"><label class="btn sm ghost">${I("img")} Foto<input type="file" id="cImg" accept="image/*" hidden></label><span class="calc" id="cCnt" style="margin-left:auto">0/1000</span><button class="btn pri sm" id="cBtn">Publicar</button></div>
+    </form>
+    ${posts.length?posts.map(postCard).join(""):`<div class="empty">${I("chat")}<b>${comTab==="siguiendo"?"Aún no sigues a nadie que haya publicado":"Todavía no hay publicaciones"}</b><span>${comTab==="siguiendo"?"Busca perfiles y síguelos para ver aquí lo que publican.":"Sé el primero en publicar algo."}</span>${comTab==="siguiendo"?`<button class="btn pri" data-ct2="buscar">Buscar gente</button>`:""}</div>`}
+  </div>
+  <div class="stack"><div class="panel"><div class="panel-h"><h3>A quién seguir</h3><button class="btn sm ghost" data-ct2="buscar">Buscar</button></div>
+    ${sugg.length?sugg.map(p=>`<div class="rowi"><a href="#perfil-${p.id}" style="display:contents;color:inherit;text-decoration:none">${avatar(p)}<div class="grow"><b>${h(p.display_name)}</b><small>${h(ROLES[p.role])}${p.city?" · "+h(p.city):""}</small></div></a><button class="btn sm pri" data-fol="${p.id}" data-on="0">Seguir</button></div>`).join(""):`<p class="muted">Ya sigues a todos los perfiles sugeridos.</p>`}
+  </div></div></div>`;
+  bindTabs(); bindPosts(v,viewComunidad);
+  $$("[data-ct2]",v).forEach(b=>b.onclick=()=>{comTab="buscar";viewComunidad();});
+  $$("[data-fol]",v).forEach(b=>b.onclick=async()=>{b.disabled=true;const ok=await toggleFollow(b.dataset.fol,false);if(ok){b.textContent="Siguiendo";b.className="btn sm ghost";}else b.disabled=false;});
+  let imgFile=null;
+  $("#cBody").oninput=e=>{$("#cCnt").textContent=`${e.target.value.length}/1000`;};
+  $("#cImg").onchange=e=>{imgFile=e.target.files[0]||null;const pv=$("#cPrev");if(imgFile){if(imgFile.size>15*1024*1024){imgFile=null;return toast("La foto pesa más de 15 MB.",true);}pv.src=URL.createObjectURL(imgFile);pv.hidden=false;}else pv.hidden=true;};
+  $("#cmp").onsubmit=async e=>{e.preventDefault();const body=$("#cBody").value.trim();
+    if(!body) return toast("Escribe algo antes de publicar.",true);
+    const b=$("#cBtn");b.disabled=true;b.textContent="Publicando…";
+    try{const image_url=imgFile?await uploadMedia(imgFile,"post"):null;
+      const {error}=await sb.from("posts").insert({author_id:me.user.id,body,image_url}); if(error) throw error;
+      toast("Publicado");comTab=comTab==="buscar"?"todo":comTab;viewComunidad();}
+    catch(x){toast("No se ha podido publicar: "+x.message,true);b.disabled=false;b.textContent="Publicar";}};
+}
+
+/* ---------- Router ---------- */
+async function route(){
+  const raw=location.hash.slice(1)||"";
+  const m=raw.match(/^([a-z-]+?)(?:-([0-9a-f]{8}-[0-9a-f-]{27}))?$/);
+  let view=m?m[1]:"", id=m?m[2]:null;
+  const priv=["resumen","explorar","mis-bolos","postulaciones","contratos","cobros","ajustes","publicar","comunidad"];
+  if(!view||view==="inicio"||["como","bolos","precio"].includes(view)) view=me?"resumen":"inicio";
+  if(priv.includes(view)&&!me){view="inicio";}
+  if(view==="postulaciones"&&!isTalent()) view="resumen";
+  if(view==="cobros"&&!isTalent()) view="resumen";
+  if(["publicar","mis-bolos"].includes(view)&&!isClient()) view="resumen";
+  window.scrollTo(0,0);
+  try{
+    switch(view){
+      case "inicio": return await viewLanding();
+      case "resumen": return await viewResumen();
+      case "explorar": return await viewExplorar();
+      case "mis-bolos": return await viewMisBolos();
+      case "postulaciones": return await viewPostulaciones();
+      case "contratos": return await viewContratos();
+      case "cobros": return await viewCobros();
+      case "ajustes": return viewAjustes();
+      case "publicar": return viewPublicar();
+      case "talento": return await viewTalento();
+      case "comunidad": return await viewComunidad();
+      case "evento": return id?await viewEvento(id):go("inicio");
+      case "perfil": return id?await viewPerfil(id):go("inicio");
+      default: return me?viewResumen():viewLanding();
+    }
+  }catch(err){console.error(err);(document.getElementById("view")||root).innerHTML=`<div class="empty">${I("x")}<b>No hemos podido cargar esta página</b><span>Revisa tu conexión y vuelve a intentarlo.</span><button class="btn" onclick="route()">Reintentar</button></div>`;}
+}
+window.addEventListener("hashchange",route);
+
+(async function init(){
+  await loadMe();
+  sb.auth.onAuthStateChange(async ev=>{if(ev==="SIGNED_OUT"){me=null;}});
+  const q=new URLSearchParams(location.search);
+  if(q.get("pago")==="ok"&&q.get("booking")&&me){
+    try{const r=await callFn("bookings",{action:"verify",booking_id:q.get("booking")});toast(r.status==="pagado"?"Pago completado. ¡Bolo cerrado!":"Estamos confirmando el pago…");}catch(x){toast(x.message,true);}
+    history.replaceState(null,"",location.pathname+location.hash);
+  }else if(q.get("pago")==="cancelado"){toast("Pago cancelado. No se ha cobrado nada.",true);history.replaceState(null,"",location.pathname+location.hash);}
+  route();
+})();
+</script>
+</body>
+</html>
