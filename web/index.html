@@ -399,6 +399,8 @@ label.btn{cursor:pointer}
 const SUPABASE_URL="https://cgygbyqwficmxyxihnoe.supabase.co";
 const SUPABASE_KEY="sb_publishable_RabaF16pCMTDefaycj4Ovw_C8nDu5ET";
 const COMMISSION=0.10;
+// Vuelve del email de "recuperar contraseña" (se lee antes de que Supabase limpie la URL)
+const RECOVERY=/type=recovery/.test(location.hash)||new URLSearchParams(location.search).get("reset")==="1";
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
 /* ---------- Utilidades ---------- */
@@ -1343,7 +1345,7 @@ window.addEventListener("hashchange",route);
     try{const r=await callFn("bookings",{action:"verify",booking_id:q.get("booking")});toast(r.status==="pagado"?"Pago completado. ¡Bolo cerrado!":"Estamos confirmando el pago…");}catch(x){toast(x.message,true);}
     history.replaceState(null,"",location.pathname+location.hash);
   }else if(q.get("pago")==="cancelado"){toast("Pago cancelado. No se ha cobrado nada.",true);history.replaceState(null,"",location.pathname+location.hash);}
-  if(q.get("reset")==="1"){
+  if(RECOVERY){
     history.replaceState(null,"",location.pathname+"#resumen");
     if(me){route();reg={mode:"newpass",step:1};renderAuth();$("#authDlg").showModal();return;}
     toast("El enlace ha caducado o ya se usó. Pide uno nuevo desde «Entrar».",true);
