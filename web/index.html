@@ -354,6 +354,7 @@ mark.hole{background:rgba(255,181,71,.18);color:var(--accent);border-radius:4px;
 .atable td{padding:12px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
 .atable tr:last-child td{border-bottom:0}
 .atable .person{gap:10px}
+.beta{font:700 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent);border-radius:6px;padding:4px 6px;margin-left:2px;align-self:center}
 .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .stat{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;display:grid;gap:2px;cursor:pointer;color:inherit;text-decoration:none;font:inherit}
 .stat:hover{border-color:var(--line-2)}
@@ -676,14 +677,14 @@ async function viewLanding(){
   document.title="Cabina · Contrata DJs y fotógrafos";
   root.innerHTML=`
   <header class="lnav"><div class="wrap">
-    <a class="logo" href="#inicio"><span class="mk"></span>Cabina</a>
+    <a class="logo" href="#inicio"><span class="mk"></span>Cabina<span class="beta">Beta</span></a>
     <nav><a href="#como">Cómo funciona</a><a href="#bolos">Bolos</a><a href="#talento">Talento</a><a href="#precio">Precio</a></nav>
     <div class="acts">${newsBtn()}<button class="btn ghost sm" data-login>Entrar</button><button class="btn pri sm" data-signup>Regístrate gratis</button></div>
   </div></header>
 
   <section class="hero"><div class="wrap">
     <div>
-      <span class="pill"><b>NUEVO</b> Registro gratis para DJs, fotógrafos y salas</span>
+      <span class="pill"><b>FASE BETA</b> Registro gratis para DJs, fotógrafos y salas</span>
       <h1>Tu próximo bolo<br>empieza <span class="hl">aquí</span>.</h1>
       <p class="sub">Cabina conecta a discotecas y promotores con DJs y fotógrafos. Publica, postúlate, contrata y cobra en un mismo sitio, sin perseguir a nadie por WhatsApp.</p>
       <div class="ctas">
@@ -770,7 +771,7 @@ async function viewLanding(){
     <div class="roles">${Object.entries(ROLE_INFO).map(([k,r])=>`<button class="rolebtn" data-signup="${k}"><span class="ic">${I(r.icon)}</span><span><b>${r.t}</b><small>${r.d}</small></span><span class="arr">${I("arr")}</span></button>`).join("")}</div>
   </div></div></section>
 
-  <footer class="f"><div class="wrap"><a class="logo" href="#inicio" style="font-size:19px"><span class="mk" style="width:22px;height:22px"></span>Cabina</a><span>Talento para la noche · Pagos procesados por Stripe</span>${legalLinks()}</div></footer>`;
+  <footer class="f"><div class="wrap"><a class="logo" href="#inicio" style="font-size:19px"><span class="mk" style="width:22px;height:22px"></span>Cabina<span class="beta">Beta</span></a><span>Talento para la noche · Pagos procesados por Stripe</span>${legalLinks()}</div></footer>`;
 
   const renderSteps=()=>{
     $("#stepsBox").innerHTML=STEPS[landingAud].map((s,i)=>`<div class="step"><div class="ic">${I(s[0])}</div><span class="n">PASO ${i+1}</span><h3>${s[1]}</h3><p>${s[2]}</p></div>`).join("");
@@ -810,7 +811,7 @@ function shell(active,content){
   const items=nav();
   root.innerHTML=`<div class="shell">
     <aside class="side">
-      <a class="logo" href="#resumen"><span class="mk"></span>Cabina</a>
+      <a class="logo" href="#resumen"><span class="mk"></span>Cabina<span class="beta">Beta</span></a>
       <div class="sec">Menú</div>
       ${items.map(([k,ic,l,hideM])=>`<a href="#${k}" class="${active===k?"on":""} ${hideM?"hide-m":""}">${I(ic)}<span>${l}</span></a>`).join("")}
       ${me.admin?`<a href="#admin" class="${active==="admin"?"on":""}">${I("eye")}<span>Admin</span></a>`:""}
@@ -820,7 +821,7 @@ function shell(active,content){
       <div class="me">${avatar(me.profile)}<div><b>${h(me.profile.display_name)}</b><small>${h(ROLES[me.profile.role])}</small></div><button class="iconbtn" id="logout" title="Cerrar sesión" aria-label="Cerrar sesión">${I("out")}</button></div>
     </aside>
     <main class="main"><div class="main-in">
-      <div class="mobtop"><a class="logo" href="#resumen" style="font-size:20px"><span class="mk" style="width:22px;height:22px"></span>Cabina</a>
+      <div class="mobtop"><a class="logo" href="#resumen" style="font-size:20px"><span class="mk" style="width:22px;height:22px"></span>Cabina<span class="beta">Beta</span></a>
         <div style="display:flex;gap:8px">${newsBtn()}${isClient()?`<a href="#publicar" class="iconbtn" aria-label="Publicar bolo" style="color:var(--accent)">${I("plus")}</a>`:""}<a href="#ajustes" class="iconbtn" aria-label="Mi perfil">${I("user")}</a><button class="iconbtn" id="logoutM" aria-label="Cerrar sesión">${I("out")}</button></div></div>
       <div id="view">${content||`<div class="skel"></div>`}</div>
       <div class="app-legal">${legalLinks()}</div>
@@ -1148,7 +1149,7 @@ async function viewEvento(id){
 }
 
 function publicShell(){
-  root.innerHTML=`<header class="lnav"><div class="wrap"><a class="logo" href="#inicio"><span class="mk"></span>Cabina</a><nav><a href="#inicio">Inicio</a><a href="#talento">Talento</a></nav>
+  root.innerHTML=`<header class="lnav"><div class="wrap"><a class="logo" href="#inicio"><span class="mk"></span>Cabina<span class="beta">Beta</span></a><nav><a href="#inicio">Inicio</a><a href="#talento">Talento</a></nav>
     <div class="acts">${newsBtn()}<button class="btn ghost sm" data-login>Entrar</button><button class="btn pri sm" data-signup>Regístrate gratis</button></div></div></header>
     <main class="wrap" style="padding-top:32px;padding-bottom:40px"><div id="view"><div class="skel"></div></div></main>
     <footer class="f"><div class="wrap"><span>© Cabina</span>${legalLinks()}</div></footer>`;
