@@ -621,6 +621,7 @@ function renderAuth(){
       <div class="field"><label for="rEmail">Email</label><input id="rEmail" type="email" autocomplete="email" required></div>
       <div class="field"><label for="rPass">Contraseña</label><input id="rPass" type="password" autocomplete="new-password" minlength="8" required><span class="hint">Mínimo 8 caracteres.</span></div>
       <label class="check"><input type="checkbox" id="rTerms"> <span>Soy mayor de 18 años y acepto las <a href="#condiciones" target="_blank">condiciones de uso</a> y la <a href="#privacidad" target="_blank">política de privacidad</a>.</span></label>
+      <label class="check"><input type="checkbox" id="rMkt"> <span>Quiero recibir por email novedades, bolos destacados y promociones de Cabina. Puedes darte de baja cuando quieras. <em class="muted">(Opcional)</em></span></label>
       <button class="btn pri lg block" id="rBtn">Crear cuenta gratis</button>
       <p class="legal">Registro gratis. Solo se cobra comisión cuando se cierra un bolo.</p>
     </form>`;
@@ -634,7 +635,7 @@ function renderAuth(){
       if(!$("#rTerms").checked) return toast("Para crear la cuenta tienes que aceptar las condiciones y la política de privacidad.",true);
       const btn=$("#rBtn");btn.disabled=true;btn.textContent="Creando tu cuenta…";
       try{
-        const r=await fetch(`${SUPABASE_URL}/functions/v1/registro`,{method:"POST",headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY},body:JSON.stringify({email,password,role:reg.role,display_name:name,city})});
+        const r=await fetch(`${SUPABASE_URL}/functions/v1/registro`,{method:"POST",headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY},body:JSON.stringify({email,password,role:reg.role,display_name:name,city,terms:true,marketing:$("#rMkt").checked})});
         const j=await r.json().catch(()=>({}));
         if(!r.ok) throw new Error(j.error||"No se ha podido crear la cuenta.");
         const {error}=await sb.auth.signInWithPassword({email,password});
@@ -1016,6 +1017,9 @@ function viewAjustes(){
     <div class="field"><label for="pIg">Instagram</label><input id="pIg" value="${h(p.instagram||"")}" placeholder="@tuusuario"></div>
     <div class="field"><label for="pBio">${t?"Sobre ti":"Sobre la sala o promotora"}</label><textarea id="pBio" maxlength="1500" placeholder="${t?"Tu estilo, dónde has pinchado, qué te diferencia…":"Aforo, estilo musical, equipo de la cabina…"}">${h(p.bio||"")}</textarea></div>
     <div><button class="btn pri">Guardar cambios</button></div></form>
+  <div class="panel" style="max-width:780px;margin-top:18px"><div class="panel-h"><h3>Emails de Cabina</h3></div>
+    <label class="check"><input type="checkbox" id="mkOpt" disabled> <span>Quiero recibir por email novedades, bolos destacados y promociones de Cabina.</span></label>
+    <p class="muted" style="font-size:13px">Los avisos de tu cuenta (como recuperar la contraseña) te llegarán siempre. Esto solo afecta a los emails de promoción.</p></div>
   <form class="panel form" id="pwF" style="max-width:780px;margin-top:18px" novalidate><div class="panel-h"><h3>Contraseña</h3><span class="calc">${h(me.user.email||"")}</span></div>
     <div class="grid2"><div class="field"><label for="pw1">Nueva contraseña</label><input id="pw1" type="password" autocomplete="new-password" minlength="8"></div>
       <div class="field"><label for="pw2">Repite la contraseña</label><input id="pw2" type="password" autocomplete="new-password" minlength="8"></div></div>
@@ -1028,6 +1032,9 @@ function viewAjustes(){
       <label class="btn sm ${url?"ghost":"pri"}">${I("up")} ${url?"Reemplazar":"Subir"}<input type="file" accept="application/pdf,image/*" data-up="${k}" hidden></label></div>`;}).join("")}
   </div>`;
   fillMyStats();
+  sb.rpc("my_marketing").then(({data})=>{const c=$("#mkOpt");if(!c)return;c.checked=data===true;c.disabled=false;
+    c.onchange=async()=>{c.disabled=true;const {error}=await sb.rpc("set_marketing",{p_opt_in:c.checked});c.disabled=false;
+      if(error){c.checked=!c.checked;return toast("No se ha podido guardar.",true);}toast(c.checked?"Te has suscrito a los emails de Cabina":"Te has dado de baja de los emails de Cabina");};});
   $("#pwF").onsubmit=async e=>{e.preventDefault();const a=$("#pw1").value,c=$("#pw2").value;
     if(a.length<8) return toast("La contraseña necesita 8 caracteres o más.",true);
     if(a!==c) return toast("Las dos contraseñas no coinciden.",true);
@@ -1446,6 +1453,7 @@ const LEGAL_PAGES={
    <li>Darte de alta y prestarte el servicio (ejecución del contrato que aceptas al registrarte).</li>
    <li>Gestionar los pagos y la facturación de la comisión (contrato y obligación legal).</li>
    <li>Informar a la Agencia Tributaria según la normativa DAC7 (obligación legal).</li>
+   <li>Enviarte emails con novedades, bolos destacados y promociones de Cabina, solo si lo has aceptado marcando la casilla correspondiente (consentimiento). Puedes retirarlo en cualquier momento desde Mi perfil o con el enlace de baja de cada email.</li>
    <li>Mantener la seguridad de la plataforma y evitar fraudes (interés legítimo).</li>
   </ul>
   <h2>Qué es público</h2>
@@ -1590,10 +1598,18 @@ async function viewAdmin(){
     <div class="stack">
       <div class="panel"><h3>Visitantes por página</h3>${(d.visitor_pages||[]).length?d.visitor_pages.map(x=>`<div class="kv"><span>${h(x.page)}</span><b>${x.n}</b></div>`).join(""):`<p class="muted">Ningún visitante sin cuenta ahora mismo.</p>`}</div>
       <div class="panel"><h3>Usuarios por tipo</h3>${Object.keys(ROLES).map(k=>`<div class="kv"><span>${ROLES[k]}</span><b>${roles[k]||0}</b></div>`).join("")}</div>
+      <div class="panel"><div class="panel-h"><h3>Suscritos a emails</h3><span class="calc" id="subN">…</span></div>
+        <p class="muted" style="font-size:13.5px">Solo quienes marcaron la casilla de emails comerciales.</p>
+        <button class="btn sm ghost" id="subCopy">${I("check")} Copiar emails</button></div>
       <div class="panel"><h3>Actividad</h3><div class="kv"><span>Bolos abiertos</span><b>${t.events_open||0}</b></div><div class="kv"><span>Postulaciones</span><b>${t.applications||0}</b></div><div class="kv"><span>Publicaciones</span><b>${t.posts||0}</b></div></div>
     </div></div>`;
   };
   await draw();
+  const subsLoad=async()=>{const {data}=await sb.rpc("admin_subscribers");const list=data||[];const n=document.getElementById("subN");if(n)n.textContent=list.length;return list;};
+  const hookSubs=()=>{const b=document.getElementById("subCopy");if(!b||b.dataset.on)return;b.dataset.on=1;subsLoad();
+    b.onclick=async()=>{const list=await subsLoad();if(!list.length)return toast("Todavía no hay suscritos.",true);
+      const txt=list.map(x=>x.email).join(", ");try{await navigator.clipboard.writeText(txt);toast(`${list.length} emails copiados`);}catch(_){prompt("Emails suscritos",txt);}};};
+  hookSubs(); new MutationObserver(hookSubs).observe(document.getElementById("view"),{childList:true,subtree:true});
   if(adminTimer) clearInterval(adminTimer);
   adminTimer=setInterval(()=>{if(!document.hidden)draw();},5000);
 }

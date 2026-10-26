@@ -1,7 +1,13 @@
-// Registro sin email de confirmación (modo pruebas). Crea la cuenta ya confirmada;
-// la web inicia sesión justo después con email y contraseña.
-import { admin, cors, json } from "../_shared/common.ts";
+// Registro: crea la cuenta (sin email de confirmación) y guarda si acepta emails comerciales.
+import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+const json = (b: unknown, status = 200) =>
+  new Response(JSON.stringify(b), { status, headers: { ...cors, "Content-Type": "application/json" } });
 const ROLES = ["dj", "fotografo", "promotor", "discoteca"];
 
 Deno.serve(async (req) => {
@@ -13,13 +19,16 @@ Deno.serve(async (req) => {
     const role = String(b.role ?? "");
     const name = String(b.display_name ?? "").trim().slice(0, 80);
     const city = String(b.city ?? "").trim().slice(0, 80);
+    const marketing = b.marketing === true;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: "Ese email no parece válido." }, 400);
     if (password.length < 8) return json({ error: "La contraseña necesita 8 caracteres o más." }, 400);
     if (!ROLES.includes(role)) return json({ error: "Elige qué tipo de cuenta quieres." }, 400);
     if (name.length < 2) return json({ error: "Escribe tu nombre (mínimo 2 letras)." }, 400);
-    const { error } = await admin().auth.admin.createUser({
+    if (b.terms !== true) return json({ error: "Tienes que aceptar las condiciones y la política de privacidad." }, 400);
+    const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
+    const { error } = await db.auth.admin.createUser({
       email, password, email_confirm: true,
-      user_metadata: { role, display_name: name, city },
+      user_metadata: { role, display_name: name, city, marketing, terms_accepted_at: new Date().toISOString() },
     });
     if (error) {
       const msg = /already|registered|exists/i.test(error.message)
