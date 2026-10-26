@@ -475,9 +475,8 @@ const ROLE_INFO={
  discoteca:{icon:"build",t:"Discoteca o sala",d:"Llena tu cabina cada fin de semana"}
 };
 const TALENT=["dj","fotografo"];
-// Cuentas demo (modo pruebas). Borrar antes de lanzar.
-const DEMO_PASS="Cabina2026!";
-const DEMO=[["sala@cabina.demo","Sala Nébula","build"],["dj@cabina.demo","DJ Marta Lux","disc"],["foto@cabina.demo","Fotógrafo Leo","cam"],["promo@cabina.demo","Promotora","mega"]];
+// Pagos: false hasta pasar Stripe a modo real (oculta "Activar cobros" y "Contratar y pagar")
+const PAYMENTS_LIVE=false;
 // Abierta como archivo local: Stripe no puede volver aquí, así que se abre en otra pestaña
 const LOCAL=!/^https:$/.test(location.protocol)&&!/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 let pendingBooking=null, pendingOnboard=false;
@@ -540,11 +539,8 @@ function renderAuth(){
       <div class="field"><div class="split"><label for="lPass">Contraseña</label><button type="button" class="linkbtn" data-forgot>¿Olvidaste tu contraseña?</button></div><input id="lPass" type="password" autocomplete="current-password" required></div>
       <button class="btn pri lg block" id="lBtn">Entrar</button>
     </form>
-    <div class="switch">¿Aún no tienes cuenta? <button data-goreg>Regístrate gratis</button></div>
-    <div class="demo-box"><span class="lbl">Modo pruebas · entra con una cuenta demo</span>
-      <div class="demo-grid">${DEMO.map(([em,l,ic])=>`<button type="button" class="btn sm ghost" data-demo="${em}">${I(ic)}${l}</button>`).join("")}</div></div>`;
+    <div class="switch">¿Aún no tienes cuenta? <button data-goreg>Regístrate gratis</button></div>`;
     $("[data-forgot]",b).onclick=()=>{reg.mode="forgot";reg.email=$("#lEmail").value.trim();renderAuth();};
-    $$("[data-demo]",b).forEach(x=>x.onclick=()=>{$("#lEmail").value=x.dataset.demo;$("#lPass").value=DEMO_PASS;$("#loginF").requestSubmit();});
     $("#loginF").onsubmit=async e=>{e.preventDefault();const btn=$("#lBtn");btn.disabled=true;
       const {error}=await sb.auth.signInWithPassword({email:$("#lEmail").value.trim(),password:$("#lPass").value});
       btn.disabled=false;
@@ -658,7 +654,6 @@ const STEPS={
 async function viewLanding(){
   document.title="Cabina · Contrata DJs y fotógrafos";
   root.innerHTML=`
-  <div class="testbar">MODO PRUEBAS · Pulsa "Entrar" para usar las cuentas demo · Tarjeta de prueba 4242 4242 4242 4242</div>
   <header class="lnav"><div class="wrap">
     <a class="logo" href="#inicio"><span class="mk"></span>Cabina</a>
     <nav><a href="#como">Cómo funciona</a><a href="#bolos">Bolos</a><a href="#talento">Talento</a><a href="#precio">Precio</a></nav>
@@ -804,7 +799,6 @@ function shell(active,content){
     <main class="main"><div class="main-in">
       <div class="mobtop"><a class="logo" href="#resumen" style="font-size:20px"><span class="mk" style="width:22px;height:22px"></span>Cabina</a>
         <div style="display:flex;gap:8px">${isClient()?`<a href="#publicar" class="iconbtn" aria-label="Publicar bolo" style="color:var(--accent)">${I("plus")}</a>`:""}<a href="#ajustes" class="iconbtn" aria-label="Mi perfil">${I("user")}</a><button class="iconbtn" id="logoutM" aria-label="Cerrar sesión">${I("out")}</button></div></div>
-      <div class="testbar" style="border-radius:10px;margin-bottom:20px;border:1px solid rgba(255,181,71,.3)">MODO PRUEBAS · Para pagar usa la tarjeta 4242 4242 4242 4242, cualquier fecha futura y cualquier CVC</div>
       <div id="view">${content||`<div class="skel"></div>`}</div>
       <div class="app-legal">${legalLinks()}</div>
     </div></main></div>`;
@@ -838,7 +832,7 @@ async function viewResumen(){
       sb.from("bookings").select("*, events(id,title,event_date,city)").eq("talent_id",me.user.id).eq("status","pagado").order("paid_at",{ascending:false}),
       sb.from("events").select("*, profiles:owner_id(display_name)").eq("status","abierto").eq("role_needed",p.role).gte("event_date",new Date().toISOString()).order("event_date").limit(20)
     ]);
-    let pay={ready:false,connected:false}; try{pay=await callFn("stripe-connect",{action:"status"});}catch(_){}
+    let pay={ready:false,connected:false}; if(PAYMENTS_LIVE){try{pay=await callFn("stripe-connect",{action:"status"});}catch(_){}}
     const applied=new Set(apps.map(a=>a.event_id));
     let rec=(recQ.data||[]).filter(e=>!applied.has(e.id));
     const near=rec.filter(e=>p.city&&e.city.toLowerCase().includes(p.city.toLowerCase()));
@@ -846,7 +840,8 @@ async function viewResumen(){
     const pend=apps.filter(a=>a.status==="pendiente").length;
     const earned=bks.reduce((s,b)=>s+b.amount_cents-b.fee_cents,0);
     const upcoming=bks.filter(b=>new Date(b.events.event_date)>new Date());
-    if(!pay.ready) notice=`<div class="notice">${I("card")}<div class="grow"><b>Activa tus cobros para poder ser contratado</b><small>Las salas no pueden pagarte hasta que lo hagas. Son 5 minutos con Stripe.</small></div><a href="#cobros" class="btn pri">Activar cobros</a></div>`;
+    if(!PAYMENTS_LIVE) notice=`<div class="notice">${I("bolt")}<div class="grow"><b>Completa tu perfil mientras abrimos los pagos</b><small>Muy pronto las salas podrán contratarte y pagarte desde Cabina. Un perfil completo, con presskit y rider, te pondrá primero en la lista.</small></div><a href="#ajustes" class="btn pri">Completar perfil</a></div>`;
+    else if(!pay.ready) notice=`<div class="notice">${I("card")}<div class="grow"><b>Activa tus cobros para poder ser contratado</b><small>Las salas no pueden pagarte hasta que lo hagas. Son 5 minutos con Stripe.</small></div><a href="#cobros" class="btn pri">Activar cobros</a></div>`;
     kpis=`<div class="kpis">
       <div class="kpi hl"><div class="top">Ganado en Cabina ${I("euro")}</div><b>${eurc(earned)}</b><small>neto, ya descontada la comisión</small></div>
       <div class="kpi"><div class="top">Bolos cerrados ${I("check")}</div><b>${bks.length}</b><small>${upcoming.length} ${upcoming.length===1?"próximo":"próximos"}</small></div>
@@ -955,6 +950,14 @@ async function viewContratos(){
 
 async function viewCobros(){
   const v=shell("cobros");
+  if(!PAYMENTS_LIVE){v.innerHTML=`<div class="ph"><div><h1>Cobros</h1><p>Cómo te llegará el dinero de tus bolos.</p></div></div>
+  <div class="cols"><div class="panel"><div class="panel-h"><h3>Cuenta de cobro</h3><span class="chip wait"><span class="dot"></span>Próximamente</span></div>
+    <p class="muted">Estamos terminando de abrir los pagos dentro de Cabina. Te avisaremos cuando puedas activar tus cobros. Ese día solo tendrás que verificar tu identidad y añadir tu IBAN a través de Stripe; Cabina nunca ve tus datos bancarios.</p>
+    <p class="muted">Mientras tanto, no necesitas hacer nada aquí.</p></div>
+  <div class="panel"><h3>Así funcionará</h3>
+    <div class="rowi"><span class="avatar" style="width:34px;height:34px;font-size:13px">1</span><div class="grow"><b>La sala paga al contratarte</b><small>Pago por adelantado con tarjeta.</small></div></div>
+    <div class="rowi"><span class="avatar" style="width:34px;height:34px;font-size:13px">2</span><div class="grow"><b>Stripe separa la comisión</b><small>10 % para Cabina, 90 % para ti.</small></div></div>
+    <div class="rowi"><span class="avatar" style="width:34px;height:34px;font-size:13px">3</span><div class="grow"><b>Lo recibes en tu banco</b><small>Transferencia automática a tu IBAN.</small></div></div></div></div>`;return;}
   v.innerHTML=`<div class="ph"><div><h1>Cobros</h1><p>Cómo te llega el dinero de tus bolos.</p></div></div><div class="skel"></div>`;
   let st={connected:false,ready:false},err=null;
   try{st=await callFn("stripe-connect",{action:"status"});}catch(e){err=e.message;}
@@ -1002,7 +1005,6 @@ function viewAjustes(){
   </div>`;
   fillMyStats();
   $("#pwF").onsubmit=async e=>{e.preventDefault();const a=$("#pw1").value,c=$("#pw2").value;
-    if((me.user.email||"").endsWith("@cabina.demo")) return toast("Las cuentas demo no pueden cambiar la contraseña.",true);
     if(a.length<8) return toast("La contraseña necesita 8 caracteres o más.",true);
     if(a!==c) return toast("Las dos contraseñas no coinciden.",true);
     const btn=$("#pwBtn");btn.disabled=true;const {error}=await sb.auth.updateUser({password:a});btn.disabled=false;
@@ -1077,7 +1079,7 @@ async function viewEvento(id){
         <a class="person" href="#perfil-${a.profiles.id}" style="color:inherit;text-decoration:none;flex:1;min-width:0">${avatar(a.profiles)}<div><b>${h(a.profiles.display_name)}</b><div class="muted" style="font-size:13px">${h(a.profiles.city||"")}${(a.profiles.genres||[]).length?" · "+h(a.profiles.genres.slice(0,3).join(", ")):""}</div></div></a>
         <b style="font:700 20px var(--display)">${eur(a.price_eur)}</b>
         ${a.message?`<p class="muted" style="width:100%;font-size:14.5px">${h(a.message)}</p>`:""}
-        <div style="width:100%">${a.status==="pendiente"&&e.status==="abierto"?`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn pri sm" data-hire="${a.id}">Contratar y pagar ${eur(a.price_eur)}</button><button class="btn sm ghost" data-rej="${a.id}">Descartar</button></div>`:stChip(a.status)}</div>
+        <div style="width:100%">${a.status==="pendiente"&&e.status==="abierto"?`<div style="display:flex;gap:8px;flex-wrap:wrap">${PAYMENTS_LIVE?`<button class="btn pri sm" data-hire="${a.id}">Contratar y pagar ${eur(a.price_eur)}</button>`:`<button class="btn sm" disabled title="Muy pronto podrás pagar desde Cabina">Contratar · pagos muy pronto</button>`}<button class="btn sm ghost" data-rej="${a.id}">Descartar</button></div>`:stChip(a.status)}</div>
       </div>`).join(""):`<div class="empty">${I("inbox")}<b>Aún no hay postulaciones</b><span>Suelen llegar en las primeras horas. Mientras, puedes buscar en Talento.</span><a class="btn ghost sm" href="#talento">Ver talento</a></div>`}</div>`;
   }else if(!me){
     side=`<div class="panel" style="text-align:center;justify-items:center">${I("lock")}<h3>¿Te interesa este bolo?</h3><p class="muted">Crea tu perfil gratis para ver el caché y postularte con tu precio.</p><button class="btn pri lg block" data-signup="${h(e.role_needed)}">Regístrate gratis</button><button class="btn ghost block" data-login>Ya tengo cuenta</button></div>`;
