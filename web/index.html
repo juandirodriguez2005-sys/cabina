@@ -433,6 +433,8 @@ label.btn{cursor:pointer}
   .dlg{padding:22px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.vtick{display:inline-flex;vertical-align:-.12em;margin-left:.3em;color:#3b9cff;font-size:.95em;flex:none}
+.vlabel{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(59,156,255,.12);color:#7cbcff;font-size:13px;font-weight:600;margin-top:8px}
 </style>
 </head>
 <body>
@@ -524,6 +526,8 @@ const eurc=c=>new Intl.NumberFormat("es-ES",{style:"currency",currency:"EUR",max
 const fdate=d=>new Date(d).toLocaleString("es-ES",{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"});
 const fshort=d=>new Date(d).toLocaleDateString("es-ES",{day:"numeric",month:"short"});
 const initials=n=>h((n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join("").toUpperCase());
+const vtick=p=>p?.verified?`<span class="vtick" title="${h(p.verified_label||"Cuenta verificada")}" aria-label="Cuenta verificada"><svg viewBox="0 0 24 24" width="1em" height="1em"><path fill="currentColor" d="M12 1.5l2.6 2 3.2-.3 1 3.1 2.8 1.6-.9 3.1 1.3 3-2.6 1.9-.4 3.2-3.2.2L12 22.5l-2.6-2-3.2.3-1-3.1-2.8-1.6.9-3.1L2 10l2.6-1.9.4-3.2 3.2-.2z"/><path d="M8 12.3l2.7 2.7L16.3 9" fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>`:"";
+const nm=p=>`${h(p?.display_name)}${vtick(p)}`;
 const avatar=(p,cls="")=>`<div class="avatar ${cls}">${p?.avatar_url&&/^https:\/\//.test(p.avatar_url)?`<img src="${h(p.avatar_url)}" alt="">`:initials(p?.display_name)}</div>`;
 const chip=r=>`<span class="chip ${h(r)}">${h(ROLES[r]||r)}</span>`;
 const stChip=s=>{const m={pendiente:"wait",aceptada:"ok",rechazada:"bad",abierto:"wait",cerrado:"ok",cancelado:"bad",pagado:"ok"};const t={pendiente:"Pendiente",aceptada:"Contratado",rechazada:"Descartada",abierto:"Abierto",cerrado:"Cerrado",cancelado:"Cancelado",pagado:"Pagado"};return `<span class="chip ${m[s]||""}"><span class="dot"></span>${t[s]||h(s)}</span>`;};
@@ -659,7 +663,7 @@ function eventRow(e,{locked=false}={}){
     <div class="date"><span>${MONTHS[d.getMonth()]}</span><b>${d.getDate()}</b><span>${d.toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"})}</span></div>
     <div class="meta"><div class="tags">${chip(e.role_needed)}${e.status!=="abierto"?stChip(e.status):""}${e.app_count!=null?`<span class="chip">${e.app_count} postulaci${e.app_count===1?"ón":"ones"}</span>`:""}</div>
       <h3>${h(e.title)}</h3>
-      <p>${I("pin")}${h(e.venue_name||"Sala por confirmar")} · ${h(e.city)}${e.profiles?` · ${h(e.profiles.display_name)}`:""}</p></div>
+      <p>${I("pin")}${h(e.venue_name||"Sala por confirmar")} · ${h(e.city)}${e.profiles?` · ${nm(e.profiles)}`:""}</p></div>
     <div class="price">${locked?`<span class="lk">${I("lock")}Ver caché</span>`:e.budget_eur?eur(e.budget_eur):"A convenir"}<small>presupuesto</small></div>
   </button>`;
 }
@@ -786,7 +790,7 @@ async function viewLanding(){
   $("#cRange").oninput=upd;upd();
   $$('.lnav nav a').forEach(a=>a.onclick=e=>{const id=a.getAttribute("href").slice(1);if(id==="talento")return;e.preventDefault();const el=document.getElementById(id);if(!el)return;const y=el.getBoundingClientRect().top+scrollY-72;window.scrollTo({top:y,behavior:"smooth"});setTimeout(()=>{if(Math.abs(scrollY-y)>40)window.scrollTo(0,y);},700);});
 
-  const {data:evs=[]}=await sb.from("events").select("*, profiles:owner_id(display_name)").eq("status","abierto").gte("event_date",new Date().toISOString()).order("event_date").limit(6);
+  const {data:evs=[]}=await sb.from("events").select("*, profiles:owner_id(display_name,verified,verified_label)").eq("status","abierto").gte("event_date",new Date().toISOString()).order("event_date").limit(6);
   const feed=$("#feed"); if(!feed) return;
   if(!evs.length){
     feed.innerHTML=`<div class="empty">${I("cal")}<b>Los primeros bolos están a punto de llegar</b><span>Regístrate ahora y te avisaremos en cuanto se publiquen en tu ciudad.</span><button class="btn pri" data-signup>Crear cuenta gratis</button></div>`;
@@ -819,7 +823,7 @@ function shell(active,content){
       <a href="#" data-news class="hide-m">${I("bell")}<span>Novedades</span><span class="badge nbadge" ${NEWS&&unseenNews().length?"":"hidden"}>${NEWS?unseenNews().length:""}</span></a>
       <div class="cta"><a href="#publicar" class="btn pri block" style="justify-content:center;color:var(--accent-ink)">${I("plus")} Publicar bolo</a></div>
       ${!isTalent()?``:`<div class="sec">Descubre</div><a href="#talento" class="${active==="talento"?"on":""} hide-m">${I("users")}<span>Talento</span></a>`}
-      <div class="me">${avatar(me.profile)}<div><b>${h(me.profile.display_name)}</b><small>${h(ROLES[me.profile.role])}</small></div><button class="iconbtn" id="logout" title="Cerrar sesión" aria-label="Cerrar sesión">${I("out")}</button></div>
+      <div class="me">${avatar(me.profile)}<div><b>${nm(me.profile)}</b><small>${h(ROLES[me.profile.role])}</small></div><button class="iconbtn" id="logout" title="Cerrar sesión" aria-label="Cerrar sesión">${I("out")}</button></div>
     </aside>
     <main class="main"><div class="main-in">
       <div class="mobtop"><a class="logo" href="#resumen" style="font-size:20px"><span class="mk" style="width:22px;height:22px"></span>Cabina<span class="beta">Beta</span></a>
@@ -855,7 +859,7 @@ async function viewResumen(){
     const [{data:apps=[]},{data:bks=[]},recQ]=await Promise.all([
       sb.from("applications").select("*, events(id,title,event_date,city,status)").eq("talent_id",me.user.id).order("created_at",{ascending:false}),
       sb.from("bookings").select("*, events(id,title,event_date,city)").eq("talent_id",me.user.id).eq("status","pagado").order("paid_at",{ascending:false}),
-      sb.from("events").select("*, profiles:owner_id(display_name)").eq("status","abierto").eq("role_needed",p.role).neq("owner_id",me.user.id).gte("event_date",new Date().toISOString()).order("event_date").limit(20)
+      sb.from("events").select("*, profiles:owner_id(display_name,verified,verified_label)").eq("status","abierto").eq("role_needed",p.role).neq("owner_id",me.user.id).gte("event_date",new Date().toISOString()).order("event_date").limit(20)
     ]);
     let pay={ready:false,connected:false}; if(PAYMENTS_LIVE){try{pay=await callFn("stripe-connect",{action:"status"});}catch(_){}}
     const applied=new Set(apps.map(a=>a.event_id));
@@ -880,7 +884,7 @@ async function viewResumen(){
   }else{
     const [{data:evs=[]},{data:bks=[]}]=await Promise.all([
       sb.from("events").select("*, applications(count)").eq("owner_id",me.user.id).order("event_date",{ascending:true}),
-      sb.from("bookings").select("*, events(id,title,event_date,city), talent:talent_id(display_name,avatar_url)").eq("client_id",me.user.id).eq("status","pagado").order("paid_at",{ascending:false})
+      sb.from("bookings").select("*, events(id,title,event_date,city), talent:talent_id(display_name,avatar_url,verified,verified_label)").eq("client_id",me.user.id).eq("status","pagado").order("paid_at",{ascending:false})
     ]);
     evs.forEach(e=>e.app_count=e.applications?.[0]?.count??0);
     const open=evs.filter(e=>e.status==="abierto");
@@ -897,7 +901,7 @@ async function viewResumen(){
     left=`<div class="panel"><div class="panel-h"><h3>Tus bolos abiertos</h3><a href="#mis-bolos">Ver todos</a></div>
         <div class="list">${open.length?open.slice(0,5).map(e=>eventRow(e)).join(""):`<div class="empty">${I("brief")}<b>No tienes bolos abiertos</b><span>Publica uno y recibe propuestas hoy mismo.</span><a class="btn pri" href="#publicar">${I("plus")} Publicar bolo</a></div>`}</div></div>
       <div class="panel"><div class="panel-h"><h3>Últimas contrataciones</h3><a href="#contratos">Historial</a></div>
-        <div>${bks.length?bks.slice(0,4).map(b=>`<div class="rowi">${avatar(b.talent)}<div class="grow"><b>${h(b.talent?.display_name)}</b><small>${h(b.events.title)} · ${fshort(b.events.event_date)}</small></div><b style="font-family:var(--display)">${eurc(b.amount_cents)}</b></div>`).join(""):`<p class="muted">Aquí verás a los artistas que contrates.</p>`}</div></div>`;
+        <div>${bks.length?bks.slice(0,4).map(b=>`<div class="rowi">${avatar(b.talent)}<div class="grow"><b>${nm(b.talent)}</b><small>${h(b.events.title)} · ${fshort(b.events.event_date)}</small></div><b style="font-family:var(--display)">${eurc(b.amount_cents)}</b></div>`).join(""):`<p class="muted">Aquí verás a los artistas que contrates.</p>`}</div></div>`;
   }
   v.innerHTML=`<div class="ph"><div><h1>${hi}, ${h(p.display_name.split(" ")[0])}</h1><p>${t?"Esto es lo que pasa con tus bolos.":"Así van tus bolos y contrataciones."}</p></div>
     ${t?`<a href="#explorar" class="btn pri">${I("search")} Buscar bolos</a>`:`<a href="#publicar" class="btn pri">${I("plus")} Publicar bolo</a>`}</div>
@@ -909,7 +913,7 @@ async function viewResumen(){
           <div class="stack" style="gap:8px">${todos.map(([l,ok,href])=>`<a class="todo ${ok?"done":""}" ${ok?"":`href="#${href}"`}><span class="ck">${ok?I("check"):""}</span>${l}${ok?"":`<span class="arr">${I("arr")}</span>`}</a>`).join("")}</div>
         </div>
         <div class="panel"><div class="panel-h"><h3>Tu perfil público</h3></div>
-          <div class="person">${avatar(me.profile)}<div><b>${h(p.display_name)}</b><div class="muted" style="font-size:13.5px">${h(ROLES[p.role])} · ${h(p.city||"sin ciudad")}</div></div></div>
+          <div class="person">${avatar(me.profile)}<div><b>${nm(p)}</b><div class="muted" style="font-size:13.5px">${h(ROLES[p.role])} · ${h(p.city||"sin ciudad")}</div></div></div>
           <div class="statgrid" id="myStats">${statGrid(null,p.id)}</div>
           <a class="btn ghost block" href="#perfil-${p.id}">${I("eye")} Ver como lo ven los demás</a></div>
       </div></div>`;
@@ -919,7 +923,7 @@ async function viewResumen(){
 async function viewExplorar(){
   const v=shell(isTalent()?"explorar":"mis-bolos");
   const f=filters;
-  let q=sb.from("events").select("*, profiles:owner_id(display_name)").eq("status","abierto").gte("event_date",new Date().toISOString()).order("event_date").limit(60);
+  let q=sb.from("events").select("*, profiles:owner_id(display_name,verified,verified_label)").eq("status","abierto").gte("event_date",new Date().toISOString()).order("event_date").limit(60);
   if(f.city) q=q.ilike("city",`%${f.city}%`);
   if(f.role) q=q.eq("role_needed",f.role);
   const {data:evs=[]}=await q;
@@ -960,7 +964,7 @@ async function viewPostulaciones(){
 
 async function viewContratos(){
   const v=shell("contratos"); const t=isTalent();
-  const {data:bs=[]}=await sb.from("bookings").select("*, events(id,title,event_date,city), client:client_id(display_name,avatar_url), talent:talent_id(display_name,avatar_url)").eq("status","pagado").order("paid_at",{ascending:false});
+  const {data:bs=[]}=await sb.from("bookings").select("*, events(id,title,event_date,city), client:client_id(display_name,avatar_url,verified,verified_label), talent:talent_id(display_name,avatar_url,verified,verified_label)").eq("status","pagado").order("paid_at",{ascending:false});
   const total=bs.reduce((s,b)=>s+(t?b.amount_cents-b.fee_cents:b.amount_cents),0);
   const fees=bs.reduce((s,b)=>s+b.fee_cents,0);
   v.innerHTML=`<div class="ph"><div><h1>${t?"Bolos cerrados":"Contrataciones"}</h1><p>Historial de bolos pagados.</p></div></div>
@@ -968,7 +972,7 @@ async function viewContratos(){
     <div class="kpi hl"><div class="top">${t?"Ingresos netos":"Total invertido"} ${I("euro")}</div><b>${eurc(total)}</b></div>
     <div class="kpi"><div class="top">Bolos ${I("check")}</div><b>${bs.length}</b></div>
     <div class="kpi"><div class="top">${t?"Comisiones":"Media por bolo"} ${I("card")}</div><b>${t?eurc(fees):eurc(bs.length?Math.round(total/bs.length):0)}</b></div></div>
-  <div class="panel">${bs.length?bs.map(b=>{const o=t?b.client:b.talent;return `<div class="rowi" style="cursor:pointer" data-ev="${b.events.id}">${avatar(o)}<div class="grow"><b>${h(b.events.title)}</b><small>${t?"para":"con"} ${h(o?.display_name)} · ${fshort(b.events.event_date)} · ${h(b.events.city)}</small></div>
+  <div class="panel">${bs.length?bs.map(b=>{const o=t?b.client:b.talent;return `<div class="rowi" style="cursor:pointer" data-ev="${b.events.id}">${avatar(o)}<div class="grow"><b>${h(b.events.title)}</b><small>${t?"para":"con"} ${nm(o)} · ${fshort(b.events.event_date)} · ${h(b.events.city)}</small></div>
     <div style="text-align:right"><b style="font-family:var(--display)">${t?eurc(b.amount_cents-b.fee_cents):eurc(b.amount_cents)}</b>${t?`<div class="calc">de ${eurc(b.amount_cents)}</div>`:""}</div></div>`;}).join("")
     :`<div class="empty">${I("check")}<b>Todavía no hay bolos cerrados</b><span>${t?"Cuando una sala te contrate y pague, aparecerá aquí.":"Cuando contrates a un artista, aparecerá aquí con su justificante."}</span></div>`}</div>`;
   $$("[data-ev]",v).forEach(b=>b.onclick=()=>go("evento",b.dataset.ev));
@@ -1010,7 +1014,7 @@ function viewAjustes(){
   const v=shell("ajustes"); const p=me.profile, t=isTalent();
   v.innerHTML=`<div class="ph"><div><h1>Mi perfil</h1><p>Lo que ven ${t?"las salas y promotores":"los artistas"} cuando entran en tu perfil.</p></div><a class="btn ghost" href="#perfil-${p.id}">${I("eye")} Ver perfil público</a></div>
   <form class="panel form" id="pf" style="max-width:780px">
-    <div class="split"><div class="person">${avatar(p,"lg")}<div><b style="font-size:18px">${h(p.display_name)}</b><div class="muted">${h(ROLES[p.role])}</div></div></div><div class="statgrid" id="myStats" style="min-width:260px">${statGrid(null,p.id)}</div></div>
+    <div class="split"><div class="person">${avatar(p,"lg")}<div><b style="font-size:18px">${nm(p)}</b><div class="muted">${h(ROLES[p.role])}</div></div></div><div class="statgrid" id="myStats" style="min-width:260px">${statGrid(null,p.id)}</div></div>
     <div class="grid2"><div class="field"><label for="pName">Nombre</label><input id="pName" value="${h(p.display_name)}" maxlength="80" required></div>
       <div class="field"><label for="pCity">Ciudad</label><input id="pCity" value="${h(p.city||"")}"></div></div>
     ${t?`<div class="grid2"><div class="field"><label for="pRate">Tarifa orientativa por bolo (€)</label><input id="pRate" type="number" min="0" step="10" value="${p.rate_eur??""}"></div>
@@ -1097,18 +1101,18 @@ function viewPublicar(){
 
 async function viewEvento(id){
   const v=me?shell(isTalent()?"explorar":"mis-bolos"):publicShell();
-  const {data:e}=await sb.from("events").select("*, profiles:owner_id(id,display_name,role,city,avatar_url)").eq("id",id).single();
+  const {data:e}=await sb.from("events").select("*, profiles:owner_id(id,display_name,role,city,avatar_url,verified,verified_label)").eq("id",id).single();
   if(!e){v.innerHTML=`<div class="empty">${I("x")}<b>Este bolo ya no existe</b></div>`;return;}
   const mine=me&&e.owner_id===me.user.id;
   let side="";
   if(mine){
     const [{data:apps=[]},{data:bk=[]}]=await Promise.all([
-      sb.from("applications").select("*, profiles:talent_id(id,display_name,role,city,genres,avatar_url)").eq("event_id",id).order("created_at"),
+      sb.from("applications").select("*, profiles:talent_id(id,display_name,role,city,genres,avatar_url,verified,verified_label)").eq("event_id",id).order("created_at"),
       sb.from("bookings").select("*").eq("event_id",id).eq("status","pagado")]);
     side=`<div class="panel"><div class="panel-h"><h3>Postulaciones (${apps.length})</h3>${e.status==="abierto"?`<button class="btn sm ghost" id="cancelEv">Cancelar bolo</button>`:""}</div>
       ${bk.length?`<div class="notice" style="margin:0">${I("check")}<div class="grow"><b>Bolo cerrado y pagado</b><small>${eurc(bk[0].amount_cents)}</small></div></div>`:""}
       ${apps.length?apps.map(a=>`<div class="rowi" style="align-items:flex-start;flex-wrap:wrap">
-        <a class="person" href="#perfil-${a.profiles.id}" style="color:inherit;text-decoration:none;flex:1;min-width:0">${avatar(a.profiles)}<div><b>${h(a.profiles.display_name)}</b><div class="muted" style="font-size:13px">${h(a.profiles.city||"")}${(a.profiles.genres||[]).length?" · "+h(a.profiles.genres.slice(0,3).join(", ")):""}</div></div></a>
+        <a class="person" href="#perfil-${a.profiles.id}" style="color:inherit;text-decoration:none;flex:1;min-width:0">${avatar(a.profiles)}<div><b>${nm(a.profiles)}</b><div class="muted" style="font-size:13px">${h(a.profiles.city||"")}${(a.profiles.genres||[]).length?" · "+h(a.profiles.genres.slice(0,3).join(", ")):""}</div></div></a>
         <b style="font:700 20px var(--display)">${eur(a.price_eur)}</b>
         ${a.message?`<p class="muted" style="width:100%;font-size:14.5px">${h(a.message)}</p>`:""}
         <div style="width:100%">${a.status==="pendiente"&&e.status==="abierto"?`<div style="display:flex;gap:8px;flex-wrap:wrap">${PAYMENTS_LIVE?`<button class="btn pri sm" data-hire="${a.id}">Contratar y pagar ${eur(a.price_eur)}</button>`:`<button class="btn sm" disabled title="Muy pronto podrás pagar desde Cabina">Contratar · pagos muy pronto</button>`}<button class="btn sm ghost" data-rej="${a.id}">Descartar</button></div>`:stChip(a.status)}</div>
@@ -1135,7 +1139,7 @@ async function viewEvento(id){
       <div><span class="lbl">Cuándo</span><span>${h(fdate(e.event_date))}</span></div>
       <div><span class="lbl">Dónde</span><span>${h(e.venue_name||"Por confirmar")}, ${h(e.city)}</span></div>
       <div><span class="lbl">Presupuesto</span><span>${!me?`<span class="muted" style="display:inline-flex;gap:6px;align-items:center">${I("lock")} Regístrate para verlo</span>`:e.budget_eur?eur(e.budget_eur):"A convenir"}</span></div>
-      <div><span class="lbl">Organiza</span><span><a href="#perfil-${e.profiles.id}">${h(e.profiles.display_name)}</a> · ${h(ROLES[e.profiles.role])}</span></div>
+      <div><span class="lbl">Organiza</span><span><a href="#perfil-${e.profiles.id}">${nm(e.profiles)}</a> · ${h(ROLES[e.profiles.role])}</span></div>
     </div>
     ${e.description?`<div class="panel"><h3>Detalles</h3><p style="white-space:pre-wrap;max-width:65ch;color:var(--fg-2)">${h(e.description)}</p></div>`:""}
   </div>${side}</div>`;
@@ -1178,7 +1182,7 @@ async function viewTalento(){
     <div class="field"><label for="fRole">Perfil</label><select id="fRole"><option value="">Todos</option><option value="dj"${f.role==="dj"?" selected":""}>DJ</option><option value="fotografo"${f.role==="fotografo"?" selected":""}>Fotógrafo/a</option></select></div>
     <button class="btn">${I("search")} Filtrar</button></form>
   <div class="cards">${ps.length?ps.map(p=>`<a class="tcard" href="#perfil-${p.id}">
-    <div class="person">${avatar(p)}<div><h3 style="font-size:18px">${h(p.display_name)}</h3><div class="muted" style="font-size:14px;display:flex;gap:4px;align-items:center">${I("pin")}${h(p.city||"Sin ciudad")}</div></div></div>
+    <div class="person">${avatar(p)}<div><h3 style="font-size:18px">${nm(p)}</h3><div class="muted" style="font-size:14px;display:flex;gap:4px;align-items:center">${I("pin")}${h(p.city||"Sin ciudad")}</div></div></div>
     <div class="tags">${chip(p.role)}${(p.genres||[]).slice(0,3).map(g=>`<span class="tag">${h(g)}</span>`).join("")}</div>
     ${p.rate_eur?`<div class="calc">Desde ${eur(p.rate_eur)} por bolo</div>`:""}${miniStats(ST[p.id])}</a>`).join("")
     :`<div class="empty" style="grid-column:1/-1">${I("users")}<b>Aún no hay perfiles con esos filtros</b>${!me?`<button class="btn pri" data-signup="dj">Sé el primero</button>`:""}</div>`}</div>`;
@@ -1205,7 +1209,7 @@ async function viewPerfil(id){
   const ig=(p.instagram||"").replace(/^@/,"").replace(/^https?:\/\/(www\.)?instagram\.com\//,"").replace(/[^A-Za-z0-9._]/g,"");
   v.innerHTML=`<button class="back" onclick="history.back()">${I("left")} Volver</button>
   <div class="detail"><div class="stack" style="gap:20px">
-    <div class="person" style="gap:18px">${avatar(p,"lg")}<div><h1 style="font-size:clamp(30px,4.5vw,44px);font-weight:800">${h(p.display_name)}</h1><div class="muted" style="display:flex;gap:6px;align-items:center;margin-top:6px">${I("pin")}${h(p.city||"")}</div></div></div>
+    <div class="person" style="gap:18px">${avatar(p,"lg")}<div><h1 style="font-size:clamp(30px,4.5vw,44px);font-weight:800">${nm(p)}</h1>${p.verified?`<div class="vlabel">${vtick({verified:1})} ${h(p.verified_label||"Cuenta verificada")}</div>`:""}<div class="muted" style="display:flex;gap:6px;align-items:center;margin-top:6px">${I("pin")}${h(p.city||"")}</div></div></div>
     <div class="social"><button class="statbtn" data-people="followers" data-pid="${p.id}"><b id="fCount">${st.followers}</b> seguidores</button><button class="statbtn" data-people="following" data-pid="${p.id}"><b>${st.following}</b> siguiendo</button><span><b>${st.posts}</b> publicaciones</span>
       ${isMe?`<a class="btn sm ghost" href="#ajustes">Editar perfil</a>`:me?`<button class="btn sm ${following?"ghost":"pri"}" id="followBtn" data-on="${following?1:0}">${following?"Siguiendo":I("userplus")+" Seguir"}</button>`:`<button class="btn sm pri" data-signup>${I("userplus")} Seguir</button>`}</div>
     <div class="tags">${chip(p.role)}${(p.genres||[]).map(g=>`<span class="tag">${h(g)}</span>`).join("")}</div>
@@ -1228,7 +1232,7 @@ async function viewPerfil(id){
 
 /* ---------- Comunidad ---------- */
 const DOCS=[["presskit","Presskit","Dosier de la sala o promotora","Tu presentación: bio, fotos, logos y enlaces"],["rider","Rider técnico","Ficha técnica de la cabina","Equipo que necesitas en cabina (CDJ, mesa, monitores…)"]];
-const POST_SEL="*, author:author_id(id,display_name,role,avatar_url), post_likes(user_id)";
+const POST_SEL="*, author:author_id(id,display_name,role,avatar_url,verified,verified_label), post_likes(user_id)";
 const ST={};
 async function loadStats(ids){
   if(!ids.length) return ST;
@@ -1257,11 +1261,11 @@ async function openPeople(id,type){
   b.querySelector("[data-closel]").onclick=()=>d.close();
   if(!d.open) d.showModal();
   const col=type==="followers"?"following_id":"follower_id";
-  const emb=type==="followers"?"person:follower_id(id,display_name,role,city,avatar_url)":"person:following_id(id,display_name,role,city,avatar_url)";
+  const emb=type==="followers"?"person:follower_id(id,display_name,role,city,avatar_url,verified,verified_label)":"person:following_id(id,display_name,role,city,avatar_url,verified,verified_label)";
   const {data=[],error}=await sb.from("follows").select(emb).eq(col,id).order("created_at",{ascending:false}).limit(200);
   const people=(data||[]).map(r=>r.person).filter(Boolean);
   b.innerHTML=`<div class="dlg-h"><h2 id="listTitle">${title} · ${people.length}</h2><button class="iconbtn" data-closel aria-label="Cerrar">${I("x")}</button></div>
-    <div class="peoplelist">${error?`<p class="muted">No se ha podido cargar la lista.</p>`:people.length?people.map(p=>`<a class="rowi" href="#perfil-${p.id}" data-closel style="color:inherit;text-decoration:none">${avatar(p)}<div class="grow"><b>${h(p.display_name)}</b><small>${h(ROLES[p.role]||"")}${p.city?" · "+h(p.city):""}</small></div>${I("arr")}</a>`).join("")
+    <div class="peoplelist">${error?`<p class="muted">No se ha podido cargar la lista.</p>`:people.length?people.map(p=>`<a class="rowi" href="#perfil-${p.id}" data-closel style="color:inherit;text-decoration:none">${avatar(p)}<div class="grow"><b>${nm(p)}</b><small>${h(ROLES[p.role]||"")}${p.city?" · "+h(p.city):""}</small></div>${I("arr")}</a>`).join("")
       :`<div class="empty">${I("users")}<b>${type==="followers"?"Todavía no le sigue nadie":"Todavía no sigue a nadie"}</b></div>`}</div>`;
   $$("[data-closel]",b).forEach(x=>x.addEventListener("click",()=>d.close()));
 }
@@ -1286,7 +1290,7 @@ function postCard(p){
   const likes=(p.post_likes||[]).length; const liked=me&&(p.post_likes||[]).some(l=>l.user_id===me.user.id);
   const a=p.author||{};
   return `<article class="post" data-post="${p.id}">
-    <div class="post-h"><a class="person" href="#perfil-${a.id}" style="color:inherit;text-decoration:none;min-width:0">${avatar(a)}<div><b>${h(a.display_name)}</b><small class="muted">${h(ROLES[a.role]||"")} · ${ago(p.created_at)}</small></div></a>
+    <div class="post-h"><a class="person" href="#perfil-${a.id}" style="color:inherit;text-decoration:none;min-width:0">${avatar(a)}<div><b>${nm(a)}</b><small class="muted">${h(ROLES[a.role]||"")} · ${ago(p.created_at)}</small></div></a>
       ${me&&a.id===me.user.id?`<button class="iconbtn" data-delpost="${p.id}" aria-label="Borrar publicación">${I("trash")}</button>`:""}</div>
     <p class="post-b">${h(p.body)}</p>
     ${p.image_url&&/^https:\/\//.test(p.image_url)?`<img class="post-img" src="${h(p.image_url)}" alt="" loading="lazy">`:""}
@@ -1322,7 +1326,7 @@ async function viewComunidad(){
       const [{data:ps=[]},{data:fl=[]}]=await Promise.all([qq,sb.from("follows").select("following_id").eq("follower_id",me.user.id)]);
       const set=new Set(fl.map(x=>x.following_id));
       await loadStats(ps.map(p=>p.id));
-      $("#sRes").innerHTML=ps.length?ps.map(p=>`<div class="tcard"><a class="person" href="#perfil-${p.id}" style="color:inherit;text-decoration:none">${avatar(p)}<div><h3 style="font-size:17px">${h(p.display_name)}</h3><div class="muted" style="font-size:13.5px">${h(p.city||"")}</div></div></a>
+      $("#sRes").innerHTML=ps.length?ps.map(p=>`<div class="tcard"><a class="person" href="#perfil-${p.id}" style="color:inherit;text-decoration:none">${avatar(p)}<div><h3 style="font-size:17px">${nm(p)}</h3><div class="muted" style="font-size:13.5px">${h(p.city||"")}</div></div></a>
         <div class="tags">${chip(p.role)}${(p.genres||[]).slice(0,2).map(g=>`<span class="tag">${h(g)}</span>`).join("")}</div>
         ${miniStats(ST[p.id])}<button class="btn sm ${set.has(p.id)?"ghost":"pri"}" data-fol="${p.id}" data-on="${set.has(p.id)?1:0}">${set.has(p.id)?"Siguiendo":I("userplus")+" Seguir"}</button></div>`).join("")
         :`<div class="empty" style="grid-column:1/-1">${I("search")}<b>No hay nadie con esa búsqueda</b><span>Prueba con otro nombre o ciudad.</span></div>`;
@@ -1352,7 +1356,7 @@ async function viewComunidad(){
     ${posts.length?posts.map(postCard).join(""):`<div class="empty">${I("chat")}<b>${comTab==="siguiendo"?"Aún no sigues a nadie que haya publicado":"Todavía no hay publicaciones"}</b><span>${comTab==="siguiendo"?"Busca perfiles y síguelos para ver aquí lo que publican.":"Sé el primero en publicar algo."}</span>${comTab==="siguiendo"?`<button class="btn pri" data-ct2="buscar">Buscar gente</button>`:""}</div>`}
   </div>
   <div class="stack"><div class="panel"><div class="panel-h"><h3>A quién seguir</h3><button class="btn sm ghost" data-ct2="buscar">Buscar</button></div>
-    ${sugg.length?sugg.map(p=>`<div class="rowi"><a href="#perfil-${p.id}" style="display:contents;color:inherit;text-decoration:none">${avatar(p)}<div class="grow"><b>${h(p.display_name)}</b><small>${h(ROLES[p.role])}${p.city?" · "+h(p.city):""}</small></div></a><button class="btn sm pri" data-fol="${p.id}" data-on="0">Seguir</button></div>`).join(""):`<p class="muted">Ya sigues a todos los perfiles sugeridos.</p>`}
+    ${sugg.length?sugg.map(p=>`<div class="rowi"><a href="#perfil-${p.id}" style="display:contents;color:inherit;text-decoration:none">${avatar(p)}<div class="grow"><b>${nm(p)}</b><small>${h(ROLES[p.role])}${p.city?" · "+h(p.city):""}</small></div></a><button class="btn sm pri" data-fol="${p.id}" data-on="0">Seguir</button></div>`).join(""):`<p class="muted">Ya sigues a todos los perfiles sugeridos.</p>`}
   </div></div></div>`;
   bindTabs(); bindPosts(v,viewComunidad);
   $$("[data-ct2]",v).forEach(b=>b.onclick=()=>{comTab="buscar";viewComunidad();});
@@ -1591,7 +1595,7 @@ async function viewAdmin(){
     <div class="stack"><div class="stack">
       <div class="panel"><div class="panel-h"><h3>Conectados ahora</h3><span class="calc">${on.length}</span></div>
         ${on.length?`<div class="tablewrap"><table class="atable"><thead><tr><th>Usuario</th><th>Tipo</th><th>Ciudad</th><th>Está en</th><th>Emails</th><th>Conectado</th></tr></thead><tbody>
-        ${on.map(u=>`<tr><td><a class="person" href="#perfil-${u.user_id}" style="color:inherit;text-decoration:none"><span class="onl"></span>${avatar(u)}<div><b>${h(u.display_name)}</b><small class="muted" style="display:block;font-size:12.5px">${h(u.email||"")}</small></div></a></td>
+        ${on.map(u=>`<tr><td><a class="person" href="#perfil-${u.user_id}" style="color:inherit;text-decoration:none"><span class="onl"></span>${avatar(u)}<div><b>${nm(u)}</b><small class="muted" style="display:block;font-size:12.5px">${h(u.email||"")}</small></div></a></td>
           <td>${chip(u.role)}</td><td>${h(u.city||"—")}</td><td>${h(u.page||"—")}</td><td>${mkChip(u)}</td><td class="calc">${since(u.since)}</td></tr>`).join("")}</tbody></table></div>`
         :`<div class="empty">${I("user")}<b>Nadie con cuenta conectado ahora</b><span>En cuanto alguien entre aparecerá aquí con su nombre.</span></div>`}
       </div>
@@ -1599,7 +1603,7 @@ async function viewAdmin(){
         <div class="seg" style="margin:0">${[["todos","Todos"],["si","Suscritos"],["no","No suscritos"]].map(([k,l])=>`<button data-af="${k}" class="${admFilter===k?"on":""}">${l}</button>`).join("")}</div>
         ${(()=>{const list=(d.recent||[]).filter(u=>admFilter==="todos"||(admFilter==="si"?u.marketing:!u.marketing));
           return list.length?`<div class="tablewrap"><table class="atable"><thead><tr><th>Usuario</th><th>Tipo</th><th>Emails</th><th>Alta</th><th>Última vez</th></tr></thead><tbody>
-          ${list.map(u=>`<tr><td><a class="person" href="#perfil-${u.id}" style="color:inherit;text-decoration:none">${avatar(u)}<div><b>${h(u.display_name)}</b><small class="muted" style="display:block;font-size:12.5px">${h(u.email||"")}${u.city?" · "+h(u.city):""}</small></div></a></td>
+          ${list.map(u=>`<tr><td><a class="person" href="#perfil-${u.id}" style="color:inherit;text-decoration:none">${avatar(u)}<div><b>${nm(u)}</b><small class="muted" style="display:block;font-size:12.5px">${h(u.email||"")}${u.city?" · "+h(u.city):""}</small></div></a></td>
             <td>${chip(u.role)}</td><td>${mkChip(u)}</td><td class="calc">${since(u.created_at)}</td><td class="calc">${u.last_seen?since(u.last_seen):"—"}</td></tr>`).join("")}</tbody></table></div>`
           :`<p class="muted">${admFilter==="si"?"Nadie se ha suscrito todavía.":admFilter==="no"?"Todos los usuarios están suscritos.":"Todavía no hay registros."}</p>`;})()}
       </div></div>
