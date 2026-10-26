@@ -308,6 +308,33 @@ dialog::backdrop{background:rgba(5,3,8,.72);backdrop-filter:blur(4px)}
 .gate-inline small{color:var(--muted)}
 .linkbtn{background:none;border:0;padding:0;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer}
 .linkbtn:hover{text-decoration:underline}
+.ckb{position:fixed;left:0;right:0;bottom:0;z-index:90;padding:12px max(12px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));pointer-events:none}
+.ckb-in{pointer-events:auto;max-width:1100px;margin:0 auto;background:var(--surface-2);border:1px solid var(--line-2);border-radius:18px;box-shadow:var(--shadow);padding:18px 20px;display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap}
+.ckb-txt{flex:1;min-width:260px;display:grid;gap:6px}
+.ckb-txt p{color:var(--fg-2);font-size:14.5px}
+.ckb-btns{display:flex;gap:8px;flex-wrap:wrap}
+.ckb-cfg{display:grid;gap:8px;margin-top:6px}
+.ckb-opt{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--fg-2)}
+.ckb-opt input,.check input{width:18px;height:18px;margin-top:2px;flex:none;accent-color:var(--accent)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;color:var(--fg-2);cursor:pointer}
+.legal-links{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:13.5px}
+.legal-links a{color:var(--muted);text-decoration:none}
+.legal-links a:hover{color:var(--fg)}
+.legal-links .linkbtn{font-size:13.5px;color:var(--muted);font-weight:500}
+.app-legal{margin-top:48px;padding-top:18px;border-top:1px solid var(--line)}
+.legal-doc{max-width:760px;display:grid;gap:14px}
+.legal-doc h1{font-size:clamp(30px,4.5vw,42px);font-weight:800}
+.legal-doc h2{font-size:20px;margin-top:14px}
+.legal-doc p,.legal-doc li{color:var(--fg-2);line-height:1.7}
+.legal-doc ul{padding-left:20px;margin:0;display:grid;gap:6px}
+.legal-nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
+.legal-nav a{border:1px solid var(--line-2);border-radius:999px;padding:6px 12px;color:var(--fg-2);text-decoration:none;font-size:14px}
+.legal-nav a.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+mark.hole{background:rgba(255,181,71,.18);color:var(--accent);border-radius:4px;padding:0 4px}
+.ltable{width:100%;border-collapse:collapse;font-size:14px}
+.ltable th,.ltable td{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;vertical-align:top;color:var(--fg-2)}
+.ltable th{color:var(--fg)}
+.legal-doc .ltable{display:block;overflow-x:auto}
 .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .stat{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;display:grid;gap:2px;cursor:pointer;color:inherit;text-decoration:none;font:inherit}
 .stat:hover{border-color:var(--line-2)}
@@ -479,7 +506,7 @@ const initials=n=>h((n||"?").trim().split(/\s+/).map(w=>w[0]).slice(0,2).join(""
 const avatar=(p,cls="")=>`<div class="avatar ${cls}">${p?.avatar_url&&/^https:\/\//.test(p.avatar_url)?`<img src="${h(p.avatar_url)}" alt="">`:initials(p?.display_name)}</div>`;
 const chip=r=>`<span class="chip ${h(r)}">${h(ROLES[r]||r)}</span>`;
 const stChip=s=>{const m={pendiente:"wait",aceptada:"ok",rechazada:"bad",abierto:"wait",cerrado:"ok",cancelado:"bad",pagado:"ok"};const t={pendiente:"Pendiente",aceptada:"Contratado",rechazada:"Descartada",abierto:"Abierto",cerrado:"Cerrado",cancelado:"Cancelado",pagado:"Pagado"};return `<span class="chip ${m[s]||""}"><span class="dot"></span>${t[s]||h(s)}</span>`;};
-function toast(msg,err=false){$$(".toast").forEach(t=>t.remove());const t=document.createElement("div");t.className="toast"+(err?" err":"");t.innerHTML=(err?"":I("check"))+h(msg);document.body.append(t);setTimeout(()=>t.remove(),4000);}
+function toast(msg,err=false){$$(".toast").forEach(t=>t.remove());const t=document.createElement("div");t.className="toast"+(err?" err":"");t.innerHTML=(err?"":I("check"))+h(msg);(document.querySelector("dialog[open]")||document.body).append(t);setTimeout(()=>t.remove(),4000);}
 const isTalent=()=>me&&TALENT.includes(me.profile.role);
 const isClient=()=>me&&!TALENT.includes(me.profile.role);
 const go=(v,id)=>{const n=id?`${v}-${id}`:v; if(location.hash.slice(1)===n) route(); else location.hash=n;};
@@ -575,8 +602,9 @@ function renderAuth(){
       </div>
       <div class="field"><label for="rEmail">Email</label><input id="rEmail" type="email" autocomplete="email" required></div>
       <div class="field"><label for="rPass">Contraseña</label><input id="rPass" type="password" autocomplete="new-password" minlength="8" required><span class="hint">Mínimo 8 caracteres.</span></div>
+      <label class="check"><input type="checkbox" id="rTerms"> <span>Soy mayor de 18 años y acepto las <a href="#condiciones" target="_blank">condiciones de uso</a> y la <a href="#privacidad" target="_blank">política de privacidad</a>.</span></label>
       <button class="btn pri lg block" id="rBtn">Crear cuenta gratis</button>
-      <p class="legal">Al registrarte aceptas las condiciones de uso. Solo se cobra comisión cuando cierras un bolo.</p>
+      <p class="legal">Registro gratis. Solo se cobra comisión cuando se cierra un bolo.</p>
     </form>`;
     $("#chg").onclick=()=>{reg.step=1;renderAuth();};
     $("#regF").onsubmit=async e=>{e.preventDefault();
@@ -585,6 +613,7 @@ function renderAuth(){
       if(!city) return toast("Indica tu ciudad para mostrarte bolos cerca.",true);
       if(!/^\S+@\S+\.\S+$/.test(email)) return toast("Ese email no parece válido.",true);
       if(password.length<8) return toast("La contraseña necesita 8 caracteres o más.",true);
+      if(!$("#rTerms").checked) return toast("Para crear la cuenta tienes que aceptar las condiciones y la política de privacidad.",true);
       const btn=$("#rBtn");btn.disabled=true;btn.textContent="Creando tu cuenta…";
       try{
         const r=await fetch(`${SUPABASE_URL}/functions/v1/registro`,{method:"POST",headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY},body:JSON.stringify({email,password,role:reg.role,display_name:name,city})});
@@ -725,7 +754,7 @@ async function viewLanding(){
     <div class="roles">${Object.entries(ROLE_INFO).map(([k,r])=>`<button class="rolebtn" data-signup="${k}"><span class="ic">${I(r.icon)}</span><span><b>${r.t}</b><small>${r.d}</small></span><span class="arr">${I("arr")}</span></button>`).join("")}</div>
   </div></div></section>
 
-  <footer class="f"><div class="wrap"><a class="logo" href="#inicio" style="font-size:19px"><span class="mk" style="width:22px;height:22px"></span>Cabina</a><span>Talento para la noche · Pagos procesados por Stripe</span></div></footer>`;
+  <footer class="f"><div class="wrap"><a class="logo" href="#inicio" style="font-size:19px"><span class="mk" style="width:22px;height:22px"></span>Cabina</a><span>Talento para la noche · Pagos procesados por Stripe</span>${legalLinks()}</div></footer>`;
 
   const renderSteps=()=>{
     $("#stepsBox").innerHTML=STEPS[landingAud].map((s,i)=>`<div class="step"><div class="ic">${I(s[0])}</div><span class="n">PASO ${i+1}</span><h3>${s[1]}</h3><p>${s[2]}</p></div>`).join("");
@@ -777,6 +806,7 @@ function shell(active,content){
         <div style="display:flex;gap:8px">${isClient()?`<a href="#publicar" class="iconbtn" aria-label="Publicar bolo" style="color:var(--accent)">${I("plus")}</a>`:""}<a href="#ajustes" class="iconbtn" aria-label="Mi perfil">${I("user")}</a><button class="iconbtn" id="logoutM" aria-label="Cerrar sesión">${I("out")}</button></div></div>
       <div class="testbar" style="border-radius:10px;margin-bottom:20px;border:1px solid rgba(255,181,71,.3)">MODO PRUEBAS · Para pagar usa la tarjeta 4242 4242 4242 4242, cualquier fecha futura y cualquier CVC</div>
       <div id="view">${content||`<div class="skel"></div>`}</div>
+      <div class="app-legal">${legalLinks()}</div>
     </div></main></div>`;
   const lo=async()=>{await sb.auth.signOut();me=null;filters={city:"",role:""};tfilters={city:"",role:""};comTab="todo";go("inicio");};
   $("#logout").onclick=lo;$("#logoutM").onclick=lo;
@@ -1095,7 +1125,8 @@ async function viewEvento(id){
 function publicShell(){
   root.innerHTML=`<header class="lnav"><div class="wrap"><a class="logo" href="#inicio"><span class="mk"></span>Cabina</a><nav><a href="#inicio">Inicio</a><a href="#talento">Talento</a></nav>
     <div class="acts"><button class="btn ghost sm" data-login>Entrar</button><button class="btn pri sm" data-signup>Regístrate gratis</button></div></div></header>
-    <main class="wrap" style="padding-top:32px;padding-bottom:80px"><div id="view"><div class="skel"></div></div></main>`;
+    <main class="wrap" style="padding-top:32px;padding-bottom:40px"><div id="view"><div class="skel"></div></div></main>
+    <footer class="f"><div class="wrap"><span>© Cabina</span>${legalLinks()}</div></footer>`;
   return $("#view");
 }
 
@@ -1304,6 +1335,153 @@ async function viewComunidad(){
     catch(x){toast("No se ha podido publicar: "+x.message,true);b.disabled=false;b.textContent="Publicar";}};
 }
 
+/* ---------- Legal ---------- */
+// RELLENAR con los datos reales del titular antes de lanzar (los huecos se ven resaltados en la web)
+const LEGAL={
+  titular:"[Nombre y apellidos o razón social del titular]",
+  nif:"[NIF/CIF]",
+  domicilio:"[Domicilio completo]",
+  email:"[email de contacto]",
+  registro:"", // si es una SL: "Inscrita en el Registro Mercantil de [ciudad], tomo …, folio …, hoja …"
+  actualizado:"26 de octubre de 2026"
+};
+const hole=v=>/^\[.*\]$/.test(v)?`<mark class="hole">${h(v)}</mark>`:h(v);
+const LEGAL_PAGES={
+ "aviso-legal":{t:"Aviso legal",html:()=>`
+  <p>En cumplimiento de la Ley 34/2002, de servicios de la sociedad de la información y de comercio electrónico (LSSI), se informa de los datos del titular de este sitio web y de la plataforma Cabina:</p>
+  <ul>
+   <li><b>Titular:</b> ${hole(LEGAL.titular)}</li>
+   <li><b>NIF:</b> ${hole(LEGAL.nif)}</li>
+   <li><b>Domicilio:</b> ${hole(LEGAL.domicilio)}</li>
+   <li><b>Email de contacto:</b> ${hole(LEGAL.email)}</li>
+   ${LEGAL.registro?`<li><b>Datos registrales:</b> ${h(LEGAL.registro)}</li>`:""}
+  </ul>
+  <h2>Objeto</h2>
+  <p>Cabina es una plataforma en línea que pone en contacto a discotecas, salas y promotores de eventos con DJs y fotógrafos, y facilita el pago de las contrataciones a través de Stripe. Cabina actúa como intermediario: no organiza los eventos ni presta los servicios artísticos.</p>
+  <h2>Condiciones de acceso</h2>
+  <p>El acceso a la web es gratuito. Para publicar bolos, postularse, contratar o usar la comunidad es necesario registrarse y aceptar las <a href="#condiciones">Condiciones de uso</a> y la <a href="#privacidad">Política de privacidad</a>.</p>
+  <h2>Propiedad intelectual</h2>
+  <p>El diseño, el código, los textos y la marca Cabina pertenecen a su titular. Los contenidos que suben los usuarios (fotos, presskits, riders, publicaciones) son de sus autores, que conceden a Cabina el permiso necesario para mostrarlos dentro de la plataforma.</p>
+  <h2>Responsabilidad</h2>
+  <p>Cabina no se hace responsable de los contenidos publicados por los usuarios, aunque los retirará cuando tenga conocimiento de que son ilícitos o vulneran derechos de terceros. Puedes avisarnos en ${hole(LEGAL.email)}.</p>
+  <h2>Legislación aplicable</h2>
+  <p>Este aviso se rige por la legislación española. Para los usuarios consumidores, serán competentes los juzgados de su domicilio.</p>`},
+
+ "condiciones":{t:"Condiciones de uso",html:()=>`
+  <p>Estas condiciones regulan el uso de Cabina, plataforma gestionada por ${hole(LEGAL.titular)} (NIF ${hole(LEGAL.nif)}). Al crear una cuenta las aceptas.</p>
+  <h2>1. Quién puede usar Cabina</h2>
+  <p>Debes ser mayor de 18 años y dar datos verdaderos. Cada persona o empresa puede tener una cuenta. Eres responsable de guardar tu contraseña y de lo que se haga con tu cuenta.</p>
+  <h2>2. Qué hace Cabina</h2>
+  <p>Cabina es un intermediario. Las salas y promotores publican bolos; los DJs y fotógrafos se postulan con su precio; la sala elige y paga dentro de la plataforma. El contrato del servicio artístico se celebra directamente entre la sala o promotor y el artista. Cabina no es parte de ese contrato, no organiza el evento y no garantiza su celebración ni la calidad de la actuación.</p>
+  <h2>3. Precio y comisión</h2>
+  <ul>
+   <li>Registrarse, publicar bolos y postularse es gratis.</li>
+   <li>Cuando una sala contrata y paga un bolo, Cabina cobra una <b>comisión del 10 %</b> del importe acordado. La comisión se descuenta del importe que recibe el artista; la sala paga exactamente el precio propuesto.</li>
+   <li>Cabina emitirá al artista la factura correspondiente a su comisión, con los impuestos aplicables.</li>
+   <li>Stripe puede cobrar al artista sus propias tarifas por procesar el pago, según sus condiciones.</li>
+  </ul>
+  <h2>4. Pagos</h2>
+  <p>Los pagos se procesan a través de Stripe. Para cobrar, el artista debe completar el alta de Stripe, que incluye la verificación de identidad y una cuenta bancaria. Cabina no almacena datos de tarjetas ni cuentas bancarias.</p>
+  <h2>5. Cancelaciones y problemas</h2>
+  <ul>
+   <li>La sala puede cancelar un bolo sin coste mientras no haya contratado a nadie.</li>
+   <li>Una vez pagado, las cancelaciones, devoluciones o reclamaciones por el servicio (por ejemplo, si el artista no se presenta o el evento se suspende) se resuelven entre la sala y el artista. Cabina colaborará facilitando la información de la contratación y, cuando proceda, tramitando el reembolso a través de Stripe.</li>
+   <li>Si se reembolsa un pago, Cabina podrá devolver también su comisión.</li>
+  </ul>
+  <h2>6. Impuestos</h2>
+  <p>Cada usuario es responsable de declarar sus ingresos y de cumplir sus obligaciones fiscales y laborales. Como plataforma, Cabina debe informar anualmente a la Agencia Tributaria de los importes cobrados por los artistas (modelo 238, normativa DAC7), por lo que podrá pedirte tu NIF, dirección y fecha de nacimiento.</p>
+  <h2>7. Normas de la comunidad</h2>
+  <p>No se permite publicar contenido ilegal, ofensivo, discriminatorio, sexual o que infrinja derechos de terceros, ni hacer spam o suplantar a otras personas. No está permitido cerrar fuera de Cabina, para evitar la comisión, los bolos conocidos a través de la plataforma. Cabina puede retirar contenidos y suspender cuentas que incumplan estas normas.</p>
+  <h2>8. Contenidos que subes</h2>
+  <p>Conservas los derechos sobre tus fotos, presskits, riders y publicaciones. Nos das permiso para mostrarlos dentro de Cabina mientras tu cuenta esté activa. Debes tener derecho a publicarlos.</p>
+  <h2>9. Responsabilidad</h2>
+  <p>Cabina no responde de los acuerdos entre usuarios, de la celebración de los eventos ni de los daños derivados de ellos, salvo en los casos en que la ley no permita excluir esa responsabilidad.</p>
+  <h2>10. Baja</h2>
+  <p>Puedes pedir que borremos tu cuenta en cualquier momento escribiendo a ${hole(LEGAL.email)}. Conservaremos solo los datos que la ley nos obligue a guardar (por ejemplo, los de facturación).</p>
+  <h2>11. Cambios</h2>
+  <p>Podemos actualizar estas condiciones. Si el cambio es importante, te avisaremos antes de que entre en vigor.</p>
+  <h2>12. Ley y jurisdicción</h2>
+  <p>Se aplica la ley española. Si eres consumidor, podrás reclamar ante los juzgados de tu domicilio.</p>`},
+
+ "privacidad":{t:"Política de privacidad",html:()=>`
+  <h2>Responsable</h2>
+  <p>${hole(LEGAL.titular)}, NIF ${hole(LEGAL.nif)}, ${hole(LEGAL.domicilio)}. Contacto: ${hole(LEGAL.email)}.</p>
+  <h2>Qué datos tratamos</h2>
+  <ul>
+   <li><b>Cuenta:</b> email, contraseña (cifrada), tipo de cuenta, nombre o nombre artístico y ciudad.</li>
+   <li><b>Perfil:</b> foto, biografía, géneros o especialidades, tarifa orientativa, Instagram, presskit y rider.</li>
+   <li><b>Actividad:</b> bolos publicados, postulaciones, contrataciones, publicaciones, “me gusta” y perfiles que sigues.</li>
+   <li><b>Pagos:</b> los gestiona Stripe. Cabina guarda el importe, la comisión y el identificador del pago, nunca los datos de la tarjeta ni la cuenta bancaria.</li>
+   <li><b>Datos fiscales de los artistas:</b> nombre, NIF, dirección y fecha de nacimiento, cuando sean necesarios para la obligación de información a Hacienda.</li>
+  </ul>
+  <h2>Para qué y con qué base legal</h2>
+  <ul>
+   <li>Darte de alta y prestarte el servicio (ejecución del contrato que aceptas al registrarte).</li>
+   <li>Gestionar los pagos y la facturación de la comisión (contrato y obligación legal).</li>
+   <li>Informar a la Agencia Tributaria según la normativa DAC7 (obligación legal).</li>
+   <li>Mantener la seguridad de la plataforma y evitar fraudes (interés legítimo).</li>
+  </ul>
+  <h2>Qué es público</h2>
+  <p>Tu perfil (nombre, ciudad, foto, biografía, documentos que subas), tus publicaciones, tus bolos abiertos y el número de seguidores son visibles para otros usuarios y visitantes. Tu email y tus datos de pago no son públicos.</p>
+  <h2>Con quién compartimos datos</h2>
+  <ul>
+   <li><b>Stripe</b> (pagos y verificación de identidad).</li>
+   <li><b>Supabase</b> (base de datos y archivos, servidores en la UE).</li>
+   <li><b>Render</b> (alojamiento de la web; empresa con sede en EE. UU., con las garantías de su acuerdo de tratamiento de datos para transferencias internacionales).</li>
+   <li><b>Agencia Tributaria</b>, cuando la ley lo exija.</li>
+  </ul>
+  <p>No vendemos tus datos ni los usamos para publicidad de terceros.</p>
+  <h2>Cuánto tiempo los guardamos</h2>
+  <p>Mientras tu cuenta esté activa. Al darte de baja los borramos, salvo los que debamos conservar por obligación legal (por ejemplo, datos de facturación durante los plazos fiscales).</p>
+  <h2>Tus derechos</h2>
+  <p>Puedes pedir acceso, rectificación, supresión, oposición, limitación y portabilidad de tus datos escribiendo a ${hole(LEGAL.email)}. Si no quedas satisfecho, puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>`},
+
+ "cookies":{t:"Política de cookies",html:()=>`
+  <p>Cabina usa el almacenamiento de tu navegador (cookies y tecnologías similares) solo para lo imprescindible.</p>
+  <h2>Qué usamos</h2>
+  <table class="ltable"><thead><tr><th>Nombre</th><th>Para qué</th><th>Tipo</th><th>Duración</th></tr></thead><tbody>
+   <tr><td><code>sb-…-auth-token</code></td><td>Mantener tu sesión iniciada</td><td>Técnica, necesaria</td><td>Hasta que cierres sesión</td></tr>
+   <tr><td><code>cabina_cookies</code></td><td>Recordar tu elección sobre cookies</td><td>Técnica, necesaria</td><td>12 meses</td></tr>
+   <tr><td>Stripe</td><td>Seguridad y prevención del fraude en la página de pago de Stripe</td><td>Necesaria (de Stripe)</td><td>Según Stripe</td></tr>
+  </tbody></table>
+  <p>Ahora mismo <b>no usamos cookies de análisis ni de publicidad</b>. Si en el futuro las añadimos, solo se activarán si las aceptas en el aviso de cookies.</p>
+  <h2>Cambiar tu elección</h2>
+  <p>Puedes cambiar tu elección cuando quieras: <button class="linkbtn" data-cookies-open>abrir la configuración de cookies</button>. También puedes borrar las cookies desde los ajustes de tu navegador; si borras las necesarias, se cerrará tu sesión.</p>`}
+};
+function viewLegal(key){
+  const pg=LEGAL_PAGES[key];
+  const v=me?shell(""):publicShell();
+  v.innerHTML=`<button class="back" onclick="history.length>1?history.back():go('inicio')">${I("left")} Volver</button>
+  <article class="legal-doc"><span class="lbl">Información legal</span><h1>${pg.t}</h1><p class="muted">Última actualización: ${h(LEGAL.actualizado)}</p>${pg.html()}
+  <nav class="legal-nav">${Object.entries(LEGAL_PAGES).map(([k,p])=>`<a href="#${k}" class="${k===key?"on":""}">${p.t}</a>`).join("")}</nav></article>`;
+}
+const legalLinks=()=>`<nav class="legal-links"><a href="#aviso-legal">Aviso legal</a><a href="#condiciones">Condiciones</a><a href="#privacidad">Privacidad</a><a href="#cookies">Cookies</a><button class="linkbtn" data-cookies-open>Configurar cookies</button></nav>`;
+
+/* ---------- Aviso de cookies ---------- */
+function getConsent(){try{const c=JSON.parse(localStorage.getItem("cabina_cookies")||"null");if(c&&Date.now()-c.at<365*864e5)return c;}catch(_){}return null;}
+function setConsent(analytics){const c={necessary:true,analytics:!!analytics,at:Date.now()};try{localStorage.setItem("cabina_cookies",JSON.stringify(c));}catch(_){}window.cabinaConsent=c;closeCookieBanner();toast(analytics?"Preferencias guardadas: todas aceptadas":"Preferencias guardadas: solo necesarias");}
+function closeCookieBanner(){document.getElementById("ckb")?.remove();}
+function showCookieBanner(config=false){
+  closeCookieBanner(); const cur=getConsent();
+  const d=document.createElement("div"); d.id="ckb"; d.className="ckb"; d.setAttribute("role","dialog"); d.setAttribute("aria-label","Aviso de cookies");
+  d.innerHTML=`<div class="ckb-in">
+    <div class="ckb-txt"><b>🍪 Cookies en Cabina</b><p>Usamos cookies técnicas necesarias para que puedas iniciar sesión y pagar de forma segura. No usamos cookies de publicidad. Más información en la <a href="#cookies">política de cookies</a>.</p>
+      <div class="ckb-cfg" ${config?"":"hidden"}>
+        <label class="ckb-opt"><input type="checkbox" checked disabled> <span><b>Necesarias</b> · sesión, seguridad y pagos. Siempre activas.</span></label>
+        <label class="ckb-opt"><input type="checkbox" id="ckAn" ${cur?.analytics?"checked":""}> <span><b>Análisis</b> · estadísticas anónimas de uso para mejorar la web (ahora mismo no se usan).</span></label>
+      </div></div>
+    <div class="ckb-btns">
+      <button class="btn sm ghost" data-ck="cfg">${config?"Guardar selección":"Configurar"}</button>
+      <button class="btn sm ghost" data-ck="no">Solo necesarias</button>
+      <button class="btn sm pri" data-ck="yes">Aceptar todas</button></div></div>`;
+  document.body.append(d);
+  d.querySelector('[data-ck="yes"]').onclick=()=>setConsent(true);
+  d.querySelector('[data-ck="no"]').onclick=()=>setConsent(false);
+  d.querySelector('[data-ck="cfg"]').onclick=()=>{const cfg=d.querySelector(".ckb-cfg");if(cfg.hidden){cfg.hidden=false;d.querySelector('[data-ck="cfg"]').textContent="Guardar selección";}else setConsent(d.querySelector("#ckAn").checked);};
+}
+document.addEventListener("click",e=>{if(e.target.closest("[data-cookies-open]")){e.preventDefault();showCookieBanner(true);}});
+window.cabinaConsent=getConsent();
+
 /* ---------- Router ---------- */
 async function route(){
   const raw=location.hash.slice(1)||"";
@@ -1329,6 +1507,7 @@ async function route(){
       case "publicar": return viewPublicar();
       case "talento": return await viewTalento();
       case "comunidad": return await viewComunidad();
+      case "aviso-legal": case "condiciones": case "privacidad": case "cookies": return viewLegal(view);
       case "evento": return id?await viewEvento(id):go("inicio");
       case "perfil": return id?await viewPerfil(id):go("inicio");
       default: return me?viewResumen():viewLanding();
@@ -1338,6 +1517,7 @@ async function route(){
 window.addEventListener("hashchange",route);
 
 (async function init(){
+  if(!getConsent()) setTimeout(()=>showCookieBanner(false),400);
   await loadMe();
   sb.auth.onAuthStateChange(async ev=>{if(ev==="SIGNED_OUT"){me=null;}});
   const q=new URLSearchParams(location.search);
