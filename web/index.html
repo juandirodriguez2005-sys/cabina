@@ -1569,7 +1569,9 @@ window.addEventListener("hashchange",()=>setTimeout(beat,300));
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)beat();});
 
 /* ---------- Panel de administración ---------- */
-let adminTimer=null;
+let adminTimer=null, admFilter="todos";
+const mkChip=u=>u.marketing?`<span class="chip ok" title="Desde ${h(new Date(u.marketing_at).toLocaleString("es-ES"))}"><span class="dot"></span>Suscrito</span>`:`<span class="chip">No suscrito</span>`;
+document.addEventListener("click",e=>{const b=e.target.closest("[data-af]");if(b){admFilter=b.dataset.af;$$("[data-af]").forEach(x=>x.classList.toggle("on",x===b));if(adminTimer)viewAdmin();}});
 const since=d=>{const s=Math.max(0,(Date.now()-new Date(d))/1000);if(s<60)return"hace un momento";if(s<3600)return`hace ${Math.floor(s/60)} min`;if(s<86400)return`hace ${Math.floor(s/3600)} h`;return`hace ${Math.floor(s/86400)} d`;};
 async function viewAdmin(){
   const v=shell("admin");
@@ -1585,17 +1587,22 @@ async function viewAdmin(){
       <div class="kpi"><div class="top">Con cuenta ${I("user")}</div><b>${on.length}</b><small>usuarios conectados</small></div>
       <div class="kpi"><div class="top">Visitantes ${I("users")}</div><b>${d.visitors||0}</b><small>sin registrarse</small></div>
       <div class="kpi"><div class="top">Registrados ${I("check")}</div><b>${t.users||0}</b><small>${t.users_today||0} hoy · ${t.active_24h||0} activos en 24 h</small></div></div>
-    <div class="cols"><div class="stack">
+    <div class="stack"><div class="stack">
       <div class="panel"><div class="panel-h"><h3>Conectados ahora</h3><span class="calc">${on.length}</span></div>
-        ${on.length?`<div class="tablewrap"><table class="atable"><thead><tr><th>Usuario</th><th>Tipo</th><th>Ciudad</th><th>Está en</th><th>Conectado</th></tr></thead><tbody>
+        ${on.length?`<div class="tablewrap"><table class="atable"><thead><tr><th>Usuario</th><th>Tipo</th><th>Ciudad</th><th>Está en</th><th>Emails</th><th>Conectado</th></tr></thead><tbody>
         ${on.map(u=>`<tr><td><a class="person" href="#perfil-${u.user_id}" style="color:inherit;text-decoration:none"><span class="onl"></span>${avatar(u)}<div><b>${h(u.display_name)}</b><small class="muted" style="display:block;font-size:12.5px">${h(u.email||"")}</small></div></a></td>
-          <td>${chip(u.role)}</td><td>${h(u.city||"—")}</td><td>${h(u.page||"—")}</td><td class="calc">${since(u.since)}</td></tr>`).join("")}</tbody></table></div>`
+          <td>${chip(u.role)}</td><td>${h(u.city||"—")}</td><td>${h(u.page||"—")}</td><td>${mkChip(u)}</td><td class="calc">${since(u.since)}</td></tr>`).join("")}</tbody></table></div>`
         :`<div class="empty">${I("user")}<b>Nadie con cuenta conectado ahora</b><span>En cuanto alguien entre aparecerá aquí con su nombre.</span></div>`}
       </div>
-      <div class="panel"><div class="panel-h"><h3>Últimos registros</h3><span class="calc">${t.users||0} en total</span></div>
-        ${(d.recent||[]).length?d.recent.map(u=>`<div class="rowi"><a href="#perfil-${u.id}" style="display:contents;color:inherit;text-decoration:none">${avatar(u)}<div class="grow"><b>${h(u.display_name)}</b><small>${h(ROLES[u.role]||"")}${u.city?" · "+h(u.city):""} · ${h(u.email||"")}</small></div></a><div style="text-align:right"><div class="calc">alta ${since(u.created_at)}</div><div class="calc">${u.last_seen?"última vez "+since(u.last_seen):"sin conexión registrada"}</div></div></div>`).join(""):`<p class="muted">Todavía no hay registros.</p>`}
+      <div class="panel"><div class="panel-h"><h3>Usuarios</h3><span class="calc">${t.users||0} en total · ${t.subscribers||0} suscritos a emails</span></div>
+        <div class="seg" style="margin:0">${[["todos","Todos"],["si","Suscritos"],["no","No suscritos"]].map(([k,l])=>`<button data-af="${k}" class="${admFilter===k?"on":""}">${l}</button>`).join("")}</div>
+        ${(()=>{const list=(d.recent||[]).filter(u=>admFilter==="todos"||(admFilter==="si"?u.marketing:!u.marketing));
+          return list.length?`<div class="tablewrap"><table class="atable"><thead><tr><th>Usuario</th><th>Tipo</th><th>Emails</th><th>Alta</th><th>Última vez</th></tr></thead><tbody>
+          ${list.map(u=>`<tr><td><a class="person" href="#perfil-${u.id}" style="color:inherit;text-decoration:none">${avatar(u)}<div><b>${h(u.display_name)}</b><small class="muted" style="display:block;font-size:12.5px">${h(u.email||"")}${u.city?" · "+h(u.city):""}</small></div></a></td>
+            <td>${chip(u.role)}</td><td>${mkChip(u)}</td><td class="calc">${since(u.created_at)}</td><td class="calc">${u.last_seen?since(u.last_seen):"—"}</td></tr>`).join("")}</tbody></table></div>`
+          :`<p class="muted">${admFilter==="si"?"Nadie se ha suscrito todavía.":admFilter==="no"?"Todos los usuarios están suscritos.":"Todavía no hay registros."}</p>`;})()}
       </div></div>
-    <div class="stack">
+    <div class="cards" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr))">
       <div class="panel"><h3>Visitantes por página</h3>${(d.visitor_pages||[]).length?d.visitor_pages.map(x=>`<div class="kv"><span>${h(x.page)}</span><b>${x.n}</b></div>`).join(""):`<p class="muted">Ningún visitante sin cuenta ahora mismo.</p>`}</div>
       <div class="panel"><h3>Usuarios por tipo</h3>${Object.keys(ROLES).map(k=>`<div class="kv"><span>${ROLES[k]}</span><b>${roles[k]||0}</b></div>`).join("")}</div>
       <div class="panel"><div class="panel-h"><h3>Suscritos a emails</h3><span class="calc" id="subN">…</span></div>
