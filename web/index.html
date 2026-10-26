@@ -804,7 +804,7 @@ async function viewLanding(){
 /* ---------- App (con sesión) ---------- */
 function nav(){
   const t=isTalent();
-  const items=t?[["resumen","home","Resumen"],["comunidad","chat","Comunidad"],["explorar","search","Buscar bolos"],["postulaciones","inbox","Postulaciones"],["contratos","check","Bolos cerrados",true],["cobros","card","Cobros",true],["ajustes","user","Mi perfil",true]]
+  const items=t?[["resumen","home","Resumen"],["comunidad","chat","Comunidad"],["explorar","search","Buscar bolos"],["postulaciones","inbox","Postulaciones"],["mis-bolos","brief","Mis bolos",true],["contratos","check","Bolos cerrados",true],["cobros","card","Cobros",true],["ajustes","user","Mi perfil",true]]
               :[["resumen","home","Resumen"],["comunidad","chat","Comunidad"],["mis-bolos","brief","Mis bolos"],["talento","users","Talento"],["contratos","check","Contrataciones",true],["ajustes","user","Mi perfil",true]];
   return items;
 }
@@ -817,13 +817,13 @@ function shell(active,content){
       ${items.map(([k,ic,l,hideM])=>`<a href="#${k}" class="${active===k?"on":""} ${hideM?"hide-m":""}">${I(ic)}<span>${l}</span></a>`).join("")}
       ${me.admin?`<a href="#admin" class="${active==="admin"?"on":""}">${I("eye")}<span>Admin</span></a>`:""}
       <a href="#" data-news class="hide-m">${I("bell")}<span>Novedades</span><span class="badge nbadge" ${NEWS&&unseenNews().length?"":"hidden"}>${NEWS?unseenNews().length:""}</span></a>
-      ${isClient()?`<div class="cta"><a href="#publicar" class="btn pri block" style="justify-content:center;color:var(--accent-ink)">${I("plus")} Publicar bolo</a></div>`:""}
+      <div class="cta"><a href="#publicar" class="btn pri block" style="justify-content:center;color:var(--accent-ink)">${I("plus")} Publicar bolo</a></div>
       ${!isTalent()?``:`<div class="sec">Descubre</div><a href="#talento" class="${active==="talento"?"on":""} hide-m">${I("users")}<span>Talento</span></a>`}
       <div class="me">${avatar(me.profile)}<div><b>${h(me.profile.display_name)}</b><small>${h(ROLES[me.profile.role])}</small></div><button class="iconbtn" id="logout" title="Cerrar sesión" aria-label="Cerrar sesión">${I("out")}</button></div>
     </aside>
     <main class="main"><div class="main-in">
       <div class="mobtop"><a class="logo" href="#resumen" style="font-size:20px"><span class="mk" style="width:22px;height:22px"></span>Cabina<span class="beta">Beta</span></a>
-        <div style="display:flex;gap:8px">${newsBtn()}${isClient()?`<a href="#publicar" class="iconbtn" aria-label="Publicar bolo" style="color:var(--accent)">${I("plus")}</a>`:""}<a href="#ajustes" class="iconbtn" aria-label="Mi perfil">${I("user")}</a><button class="iconbtn" id="logoutM" aria-label="Cerrar sesión">${I("out")}</button></div></div>
+        <div style="display:flex;gap:8px">${newsBtn()}<a href="#publicar" class="iconbtn" aria-label="Publicar bolo" style="color:var(--accent)">${I("plus")}</a><a href="#ajustes" class="iconbtn" aria-label="Mi perfil">${I("user")}</a><button class="iconbtn" id="logoutM" aria-label="Cerrar sesión">${I("out")}</button></div></div>
       <div id="view">${content||`<div class="skel"></div>`}</div>
       <div class="app-legal">${legalLinks()}</div>
     </div></main></div>`;
@@ -855,7 +855,7 @@ async function viewResumen(){
     const [{data:apps=[]},{data:bks=[]},recQ]=await Promise.all([
       sb.from("applications").select("*, events(id,title,event_date,city,status)").eq("talent_id",me.user.id).order("created_at",{ascending:false}),
       sb.from("bookings").select("*, events(id,title,event_date,city)").eq("talent_id",me.user.id).eq("status","pagado").order("paid_at",{ascending:false}),
-      sb.from("events").select("*, profiles:owner_id(display_name)").eq("status","abierto").eq("role_needed",p.role).gte("event_date",new Date().toISOString()).order("event_date").limit(20)
+      sb.from("events").select("*, profiles:owner_id(display_name)").eq("status","abierto").eq("role_needed",p.role).neq("owner_id",me.user.id).gte("event_date",new Date().toISOString()).order("event_date").limit(20)
     ]);
     let pay={ready:false,connected:false}; if(PAYMENTS_LIVE){try{pay=await callFn("stripe-connect",{action:"status"});}catch(_){}}
     const applied=new Set(apps.map(a=>a.event_id));
@@ -874,6 +874,7 @@ async function viewResumen(){
       <div class="kpi"><div class="top">Bolos para ti ${I("search")}</div><b>${rec.length}</b><small>${near.length?"en "+h(p.city):"abiertos ahora"}</small></div></div>`;
     left=`<div class="panel"><div class="panel-h"><h3>Bolos recomendados para ti</h3><a href="#explorar">Ver todos</a></div>
         <div class="list">${rec.length?rec.map(e=>eventRow(e)).join(""):`<div class="empty">${I("search")}<b>No hay bolos nuevos para ti ahora</b><span>Completa tu perfil: las salas también buscan talento directamente.</span></div>`}</div></div>
+      <div class="notice">${I("brief")}<div class="grow"><b>¿Necesitas a alguien para tu sesión?</b><small>Publica un bolo: busca un fotógrafo, un DJ para el warm-up o quien te cubra una fecha.</small></div><a href="#mis-bolos" class="btn ghost">Mis bolos</a><a href="#publicar" class="btn pri" style="color:var(--accent-ink)">${I("plus")} Publicar</a></div>
       <div class="panel"><div class="panel-h"><h3>Próximos bolos confirmados</h3><a href="#contratos">Historial</a></div>
         <div>${upcoming.length?upcoming.slice(0,4).map(b=>`<div class="rowi"><div class="date" style="width:54px;padding:5px 0"><span>${MONTHS[new Date(b.events.event_date).getMonth()]}</span><b style="font-size:20px">${new Date(b.events.event_date).getDate()}</b></div><div class="grow"><b>${h(b.events.title)}</b><small>${h(b.events.city)}</small></div><b style="font-family:var(--display)">${eurc(b.amount_cents-b.fee_cents)}</b></div>`).join(""):`<p class="muted">Cuando te contraten verás aquí tu agenda.</p>`}</div></div>`;
   }else{
@@ -1171,7 +1172,7 @@ async function viewTalento(){
   if(f.role) q=q.eq("role",f.role);
   const {data:ps=[]}=await q;
   await loadStats(ps.map(p=>p.id));
-  v.innerHTML=`<div class="ph"><div><h1>Talento</h1><p>DJs y fotógrafos listos para tu próxima fiesta.</p></div>${isClient()?`<a href="#publicar" class="btn pri">${I("plus")} Publicar bolo</a>`:!me?`<button class="btn pri" data-signup="dj">Aparecer aquí gratis</button>`:""}</div>
+  v.innerHTML=`<div class="ph"><div><h1>Talento</h1><p>DJs y fotógrafos listos para tu próxima fiesta.</p></div>${me?`<a href="#publicar" class="btn pri">${I("plus")} Publicar bolo</a>`:!me?`<button class="btn pri" data-signup="dj">Aparecer aquí gratis</button>`:""}</div>
   <form class="toolbar" id="flt">
     <div class="field grow"><label for="fCity">Ciudad</label><input id="fCity" value="${h(f.city)}" placeholder="Todas las ciudades"></div>
     <div class="field"><label for="fRole">Perfil</label><select id="fRole"><option value="">Todos</option><option value="dj"${f.role==="dj"?" selected":""}>DJ</option><option value="fotografo"${f.role==="fotografo"?" selected":""}>Fotógrafo/a</option></select></div>
@@ -1215,7 +1216,7 @@ async function viewPerfil(id){
     ${p.rate_eur?`<div><span class="lbl">Tarifa orientativa</span><div style="font:800 32px var(--display);margin-top:8px">Desde ${eur(p.rate_eur)}</div></div>`:""}
     ${DOCS.filter(([k])=>/^https:\/\//.test(p[k+"_url"]||"")).map(([k,lt,lo])=>`<a class="btn ghost block" href="${h(p[k+"_url"])}" target="_blank" rel="noopener" style="justify-content:flex-start">${I("file")} ${TALENT.includes(p.role)?lt:lo}</a>`).join("")}
     ${ig?`<a class="btn ghost block" href="https://instagram.com/${ig}" target="_blank" rel="noopener">@${h(ig)} en Instagram</a>`:""}
-    ${!me?`<button class="btn pri block" data-signup="discoteca">Contratar en Cabina</button>`:isClient()&&TALENT.includes(p.role)?`<a class="btn pri block" href="#publicar">Publicar un bolo para contratar</a>`:""}
+    ${!me?`<button class="btn pri block" data-signup="discoteca">Contratar en Cabina</button>`:me&&p.id!==me.user.id&&TALENT.includes(p.role)?`<a class="btn pri block" href="#publicar">Publicar un bolo para contratar</a>`:""}
     <p class="muted" style="font-size:13px">En Cabina en ${new Date(p.created_at).toLocaleDateString("es-ES",{month:"long",year:"numeric"})}</p>
   </div></div>`;
   bindEv(v); bindPosts(v,()=>viewPerfil(id));
@@ -1633,7 +1634,6 @@ async function route(){
   if(view==="admin"&&!me?.admin) view=me?"resumen":"inicio";
   if(view!=="admin"&&adminTimer){clearInterval(adminTimer);adminTimer=null;}
   if(view==="cobros"&&!isTalent()) view="resumen";
-  if(["publicar","mis-bolos"].includes(view)&&!isClient()) view="resumen";
   window.scrollTo(0,0);
   try{
     switch(view){
