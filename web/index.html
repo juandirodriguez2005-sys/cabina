@@ -345,6 +345,15 @@ mark.hole{background:rgba(255,181,71,.18);color:var(--accent);border-radius:4px;
 .newsmeta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .newdot{font:600 12px var(--body);color:var(--accent)}
 .lnav .acts{align-items:center}
+.live{display:inline-flex;align-items:center;gap:8px;font:500 12.5px var(--mono);color:var(--ok);background:rgba(79,209,139,.1);border:1px solid rgba(79,209,139,.3);padding:6px 12px;border-radius:999px}
+.live i,.onl{width:8px;height:8px;border-radius:50%;background:var(--ok);display:inline-block;flex:none;animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(79,209,139,.6)}70%{box-shadow:0 0 0 8px rgba(79,209,139,0)}100%{box-shadow:0 0 0 0 rgba(79,209,139,0)}}
+.tablewrap{overflow-x:auto}
+.atable{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+.atable th{text-align:left;font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:0 8px 10px;border-bottom:1px solid var(--line)}
+.atable td{padding:12px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.atable tr:last-child td{border-bottom:0}
+.atable .person{gap:10px}
 .statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .stat{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;display:grid;gap:2px;cursor:pointer;color:inherit;text-decoration:none;font:inherit}
 .stat:hover{border-color:var(--line-2)}
@@ -532,8 +541,8 @@ async function callFn(name,body){
 async function loadMe(){
   const {data:{user}}=await sb.auth.getUser();
   if(!user){me=null;return;}
-  const {data:profile}=await sb.from("profiles").select("*").eq("id",user.id).single();
-  me=profile?{user,profile}:null;
+  const [{data:profile},{data:adm}]=await Promise.all([sb.from("profiles").select("*").eq("id",user.id).single(),sb.rpc("is_admin")]);
+  me=profile?{user,profile,admin:adm===true}:null;
 }
 
 /* ---------- Registro / acceso ---------- */
@@ -557,7 +566,7 @@ function renderAuth(){
       const {error}=await sb.auth.signInWithPassword({email:$("#lEmail").value.trim(),password:$("#lPass").value});
       btn.disabled=false;
       if(error) return toast(error.message.includes("Invalid")?"Email o contraseña incorrectos.":error.message.includes("confirm")?"Confirma tu email antes de entrar. Revisa tu bandeja.":error.message,true);
-      $("#authDlg").close(); await loadMe(); toast(`Hola, ${me?.profile.display_name||""}`); go("resumen");};
+      $("#authDlg").close(); await loadMe(); beat(); toast(`Hola, ${me?.profile.display_name||""}`); go("resumen");};
   }else if(reg.mode==="forgot"){
     b.innerHTML=`<div class="dlg-h"><div><h2 id="dlgTitle">Recupera tu contraseña</h2><p>Escribe el email de tu cuenta y te mandamos un enlace para crear una nueva.</p></div><button class="iconbtn" data-close aria-label="Cerrar">${I("x")}</button></div>
     <form class="form" id="fgF" novalidate>
@@ -804,6 +813,7 @@ function shell(active,content){
       <a class="logo" href="#resumen"><span class="mk"></span>Cabina</a>
       <div class="sec">Menú</div>
       ${items.map(([k,ic,l,hideM])=>`<a href="#${k}" class="${active===k?"on":""} ${hideM?"hide-m":""}">${I(ic)}<span>${l}</span></a>`).join("")}
+      ${me.admin?`<a href="#admin" class="${active==="admin"?"on":""}">${I("eye")}<span>Admin</span></a>`:""}
       <a href="#" data-news class="hide-m">${I("bell")}<span>Novedades</span><span class="badge nbadge" ${NEWS&&unseenNews().length?"":"hidden"}>${NEWS?unseenNews().length:""}</span></a>
       ${isClient()?`<div class="cta"><a href="#publicar" class="btn pri block" style="justify-content:center;color:var(--accent-ink)">${I("plus")} Publicar bolo</a></div>`:""}
       ${!isTalent()?``:`<div class="sec">Descubre</div><a href="#talento" class="${active==="talento"?"on":""} hide-m">${I("users")}<span>Talento</span></a>`}
@@ -1426,6 +1436,7 @@ const LEGAL_PAGES={
    <li><b>Cuenta:</b> email, contraseña (cifrada), tipo de cuenta, nombre o nombre artístico y ciudad.</li>
    <li><b>Perfil:</b> foto, biografía, géneros o especialidades, tarifa orientativa, Instagram, presskit y rider.</li>
    <li><b>Actividad:</b> bolos publicados, postulaciones, contrataciones, publicaciones, “me gusta” y perfiles que sigues.</li>
+   <li><b>Conexión:</b> si estás conectado, la sección de la web en la que estás y la hora de tu última visita, para las estadísticas internas de Cabina. No se comparte con otros usuarios.</li>
    <li><b>Pagos:</b> los gestiona Stripe. Cabina guarda el importe, la comisión y el identificador del pago, nunca los datos de la tarjeta ni la cuenta bancaria.</li>
    <li><b>Datos fiscales de los artistas:</b> nombre, NIF, dirección y fecha de nacimiento, cuando sean necesarios para la obligación de información a Hacienda.</li>
   </ul>
@@ -1536,6 +1547,56 @@ async function maybeAutoNews(){
 // Repintar los avisos cuando cambia la página
 window.addEventListener("hashchange",()=>setTimeout(updateNewsBadges,60));
 
+/* ---------- Conexiones en directo ---------- */
+const PAGE_NAMES={inicio:"Portada",resumen:"Resumen",explorar:"Buscar bolos","mis-bolos":"Mis bolos",postulaciones:"Postulaciones",contratos:"Contrataciones",cobros:"Cobros",ajustes:"Mi perfil",publicar:"Publicar bolo",talento:"Talento",comunidad:"Comunidad",evento:"Viendo un bolo",perfil:"Viendo un perfil",admin:"Admin","aviso-legal":"Legal",condiciones:"Legal",privacidad:"Legal",cookies:"Legal"};
+function pageName(){const raw=location.hash.slice(1)||"inicio";const v=(raw.match(/^([a-z-]+?)(?:-[0-9a-f]{8}-[0-9a-f-]{27})?$/)||[])[1]||"inicio";return PAGE_NAMES[v]||"Portada";}
+let VID=null;try{VID=localStorage.getItem("cabina_vid");if(!VID){VID=crypto.randomUUID();localStorage.setItem("cabina_vid",VID);}}catch(_){VID=crypto.randomUUID();}
+async function beat(){
+  if(document.hidden) return;
+  try{ if(me) await sb.rpc("heartbeat",{p_page:pageName()}); else await sb.rpc("visitor_heartbeat",{p_id:VID,p_page:pageName()}); }catch(_){}
+}
+setInterval(beat,25000);
+window.addEventListener("hashchange",()=>setTimeout(beat,300));
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)beat();});
+
+/* ---------- Panel de administración ---------- */
+let adminTimer=null;
+const since=d=>{const s=Math.max(0,(Date.now()-new Date(d))/1000);if(s<60)return"hace un momento";if(s<3600)return`hace ${Math.floor(s/60)} min`;if(s<86400)return`hace ${Math.floor(s/3600)} h`;return`hace ${Math.floor(s/86400)} d`;};
+async function viewAdmin(){
+  const v=shell("admin");
+  v.innerHTML=`<div class="ph"><div><h1>Admin</h1><p>Quién está en Cabina ahora mismo.</p></div><span class="live"><i></i>En directo · se actualiza cada 5 s</span></div><div id="admBody"><div class="skel"></div></div>`;
+  const draw=async()=>{
+    if(!document.getElementById("admBody")) return;
+    const {data:d,error}=await sb.rpc("admin_dashboard");
+    const el=document.getElementById("admBody"); if(!el) return;
+    if(error){el.innerHTML=`<div class="empty">${I("x")}<b>No se han podido cargar los datos</b><span>${h(error.message)}</span></div>`;return;}
+    const on=d.online||[], t=d.totals||{}, roles=t.by_role||{};
+    el.innerHTML=`<div class="kpis">
+      <div class="kpi hl"><div class="top">En línea ahora ${I("eye")}</div><b>${on.length+(d.visitors||0)}</b><small>personas en la web</small></div>
+      <div class="kpi"><div class="top">Con cuenta ${I("user")}</div><b>${on.length}</b><small>usuarios conectados</small></div>
+      <div class="kpi"><div class="top">Visitantes ${I("users")}</div><b>${d.visitors||0}</b><small>sin registrarse</small></div>
+      <div class="kpi"><div class="top">Registrados ${I("check")}</div><b>${t.users||0}</b><small>${t.users_today||0} hoy · ${t.active_24h||0} activos en 24 h</small></div></div>
+    <div class="cols"><div class="stack">
+      <div class="panel"><div class="panel-h"><h3>Conectados ahora</h3><span class="calc">${on.length}</span></div>
+        ${on.length?`<div class="tablewrap"><table class="atable"><thead><tr><th>Usuario</th><th>Tipo</th><th>Ciudad</th><th>Está en</th><th>Conectado</th></tr></thead><tbody>
+        ${on.map(u=>`<tr><td><a class="person" href="#perfil-${u.user_id}" style="color:inherit;text-decoration:none"><span class="onl"></span>${avatar(u)}<div><b>${h(u.display_name)}</b><small class="muted" style="display:block;font-size:12.5px">${h(u.email||"")}</small></div></a></td>
+          <td>${chip(u.role)}</td><td>${h(u.city||"—")}</td><td>${h(u.page||"—")}</td><td class="calc">${since(u.since)}</td></tr>`).join("")}</tbody></table></div>`
+        :`<div class="empty">${I("user")}<b>Nadie con cuenta conectado ahora</b><span>En cuanto alguien entre aparecerá aquí con su nombre.</span></div>`}
+      </div>
+      <div class="panel"><div class="panel-h"><h3>Últimos registros</h3><span class="calc">${t.users||0} en total</span></div>
+        ${(d.recent||[]).length?d.recent.map(u=>`<div class="rowi"><a href="#perfil-${u.id}" style="display:contents;color:inherit;text-decoration:none">${avatar(u)}<div class="grow"><b>${h(u.display_name)}</b><small>${h(ROLES[u.role]||"")}${u.city?" · "+h(u.city):""} · ${h(u.email||"")}</small></div></a><div style="text-align:right"><div class="calc">alta ${since(u.created_at)}</div><div class="calc">${u.last_seen?"última vez "+since(u.last_seen):"sin conexión registrada"}</div></div></div>`).join(""):`<p class="muted">Todavía no hay registros.</p>`}
+      </div></div>
+    <div class="stack">
+      <div class="panel"><h3>Visitantes por página</h3>${(d.visitor_pages||[]).length?d.visitor_pages.map(x=>`<div class="kv"><span>${h(x.page)}</span><b>${x.n}</b></div>`).join(""):`<p class="muted">Ningún visitante sin cuenta ahora mismo.</p>`}</div>
+      <div class="panel"><h3>Usuarios por tipo</h3>${Object.keys(ROLES).map(k=>`<div class="kv"><span>${ROLES[k]}</span><b>${roles[k]||0}</b></div>`).join("")}</div>
+      <div class="panel"><h3>Actividad</h3><div class="kv"><span>Bolos abiertos</span><b>${t.events_open||0}</b></div><div class="kv"><span>Postulaciones</span><b>${t.applications||0}</b></div><div class="kv"><span>Publicaciones</span><b>${t.posts||0}</b></div></div>
+    </div></div>`;
+  };
+  await draw();
+  if(adminTimer) clearInterval(adminTimer);
+  adminTimer=setInterval(()=>{if(!document.hidden)draw();},5000);
+}
+
 /* ---------- Router ---------- */
 async function route(){
   const raw=location.hash.slice(1)||"";
@@ -1545,6 +1606,8 @@ async function route(){
   if(!view||view==="inicio"||["como","bolos","precio"].includes(view)) view=me?"resumen":"inicio";
   if(priv.includes(view)&&!me){view="inicio";}
   if(view==="postulaciones"&&!isTalent()) view="resumen";
+  if(view==="admin"&&!me?.admin) view=me?"resumen":"inicio";
+  if(view!=="admin"&&adminTimer){clearInterval(adminTimer);adminTimer=null;}
   if(view==="cobros"&&!isTalent()) view="resumen";
   if(["publicar","mis-bolos"].includes(view)&&!isClient()) view="resumen";
   window.scrollTo(0,0);
@@ -1561,6 +1624,7 @@ async function route(){
       case "publicar": return viewPublicar();
       case "talento": return await viewTalento();
       case "comunidad": return await viewComunidad();
+      case "admin": return await viewAdmin();
       case "aviso-legal": case "condiciones": case "privacidad": case "cookies": return viewLegal(view);
       case "evento": return id?await viewEvento(id):go("inicio");
       case "perfil": return id?await viewPerfil(id):go("inicio");
@@ -1579,7 +1643,7 @@ window.addEventListener("hashchange",route);
     try{const r=await callFn("bookings",{action:"verify",booking_id:q.get("booking")});toast(r.status==="pagado"?"Pago completado. ¡Bolo cerrado!":"Estamos confirmando el pago…");}catch(x){toast(x.message,true);}
     history.replaceState(null,"",location.pathname+location.hash);
   }else if(q.get("pago")==="cancelado"){toast("Pago cancelado. No se ha cobrado nada.",true);history.replaceState(null,"",location.pathname+location.hash);}
-  setTimeout(maybeAutoNews,900);
+  setTimeout(maybeAutoNews,900); beat();
   if(RECOVERY){
     history.replaceState(null,"",location.pathname+"#resumen");
     if(me){route();reg={mode:"newpass",step:1};renderAuth();$("#authDlg").showModal();return;}
