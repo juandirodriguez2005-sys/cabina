@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Cabina · Contrata DJs y fotógrafos</title>
-<meta name="description" content="La plataforma donde salas y promotores contratan DJs y fotógrafos. Registro gratis, pago seguro y comisión solo cuando se cierra el bolo.">
+<title>Cabina · Contrata DJs, fotógrafos y sonido</title>
+<meta name="description" content="La plataforma donde salas y promotores contratan DJs, fotógrafos y empresas de sonido. Registro gratis, pago seguro y comisión solo cuando se cierra el bolo.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
@@ -53,6 +53,7 @@ p{margin:0}
 /* Chips */
 .chip{display:inline-flex;align-items:center;gap:6px;font:500 11.5px/1 var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:5px 9px;border-radius:999px;background:var(--surface-2);color:var(--fg-2);white-space:nowrap}
 .chip.dj{background:rgba(255,181,71,.14);color:var(--accent)}
+.chip.sonido{background:rgba(80,200,170,.15);color:#7fe0c6}
 .chip.fotografo{background:rgba(165,148,255,.16);color:#c8bdff}
 .chip.ok{background:rgba(79,209,139,.14);color:var(--ok)}
 .chip.bad{background:rgba(255,107,122,.14);color:var(--bad)}
@@ -284,6 +285,7 @@ dialog::backdrop{background:rgba(5,3,8,.72);backdrop-filter:blur(4px)}
 .stepper i{height:4px;flex:1;border-radius:99px;background:var(--surface-3)}
 .stepper i.on{background:var(--accent)}
 .roles4{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.roles4 .rolec[data-role]:last-child:nth-child(odd){grid-column:1/-1}
 .rolec{position:relative;display:grid;gap:10px;align-content:start;text-align:left;background:var(--bg-2);border:1.5px solid var(--line-2);border-radius:16px;padding:18px;cursor:pointer;transition:border-color .15s,background .15s}
 .rolec:hover{border-color:var(--muted)}
 .rolec.on{border-color:var(--accent);background:rgba(255,181,71,.07)}
@@ -469,6 +471,7 @@ const P={
  pin:'<path d="M12 21s-7-6.2-7-11.5A7 7 0 0119 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/>',
  euro:'<path d="M17 6.5A7 7 0 106.5 16M17 17.5A7 7 0 016.5 8"/><path d="M4 10.5h9M4 13.5h9"/>',
  disc:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 3a9 9 0 019 9"/>',
+ speaker:'<rect x="5" y="2.5" width="14" height="19" rx="2"/><circle cx="12" cy="14.5" r="3.5"/><circle cx="12" cy="7" r="1.4"/>',
  cam:'<path d="M3 8h4l2-3h6l2 3h4v12H3z"/><circle cx="12" cy="13.5" r="3.5"/>',
  mega:'<path d="M3 10v4h4l7 5V5L7 10z"/><path d="M18 9a4 4 0 010 6"/>',
  build:'<path d="M4 21V5l8-3 8 3v16"/><path d="M9 21v-5h6v5M9 9h.01M15 9h.01M9 13h.01M15 13h.01"/>',
@@ -491,14 +494,15 @@ const P={
  userplus:'<circle cx="9" cy="8" r="4"/><path d="M2 21c1.4-3.8 4-6 7-6s5.6 2.2 7 6M19 8v6M16 11h6"/>'
 };
 const I=(n,cls="")=>`<svg class="i ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[n]||""}</svg>`;
-const ROLES={dj:"DJ",fotografo:"Fotógrafo/a",promotor:"Promotor/a",discoteca:"Discoteca / sala"};
+const ROLES={dj:"DJ",fotografo:"Fotógrafo/a",sonido:"Empresa de sonido",promotor:"Promotor/a",discoteca:"Discoteca / sala"};
 const ROLE_INFO={
  dj:{icon:"disc",t:"DJ",d:"Consigue bolos en salas y eventos"},
  fotografo:{icon:"cam",t:"Fotógrafo/a",d:"Cubre fiestas y vende tu trabajo"},
+ sonido:{icon:"speaker",t:"Empresa de sonido",d:"Alquila equipo y técnicos para eventos"},
  promotor:{icon:"mega",t:"Promotor/a",d:"Monta tus fiestas con el mejor talento"},
  discoteca:{icon:"build",t:"Discoteca o sala",d:"Llena tu cabina cada fin de semana"}
 };
-const TALENT=["dj","fotografo"];
+const TALENT=["dj","fotografo","sonido"];
 // Pagos: false hasta pasar Stripe a modo real (oculta "Activar cobros" y "Contratar y pagar")
 const PAYMENTS_LIVE=false;
 // Abierta como archivo local: Stripe no puede volver aquí, así que se abre en otra pestaña
@@ -619,7 +623,7 @@ function renderAuth(){
     <div class="chosen"><span style="color:var(--accent)">${I(r.icon)}</span> Te registras como <b>${r.t}</b><button type="button" id="chg">Cambiar</button></div>
     <form class="form" id="regF" novalidate>
       <div class="grid2">
-        <div class="field"><label for="rName">${talent?"Nombre artístico":reg.role==="discoteca"?"Nombre de la sala":"Nombre o promotora"}</label><input id="rName" maxlength="80" autocomplete="nickname" required></div>
+        <div class="field"><label for="rName">${reg.role==="sonido"?"Nombre de la empresa":talent?"Nombre artístico":reg.role==="discoteca"?"Nombre de la sala":"Nombre o promotora"}</label><input id="rName" maxlength="80" autocomplete="nickname" required></div>
         <div class="field"><label for="rCity">Ciudad</label><input id="rCity" autocomplete="address-level2" placeholder="Madrid" required></div>
       </div>
       <div class="field"><label for="rEmail">Email</label><input id="rEmail" type="email" autocomplete="email" required></div>
@@ -674,12 +678,12 @@ const STEPS={
  talent:[["user","Crea tu perfil gratis","Tu estilo, tu ciudad, tus redes y tu tarifa. En dos minutos las salas ya pueden encontrarte."],
          ["brief","Postúlate a bolos","Ves los bolos abiertos en tu ciudad y te postulas con tu precio. Sin intermediarios ni llamadas."],
          ["euro","Cobra seguro","La sala paga por adelantado dentro de Cabina y el dinero llega a tu cuenta. Se acabó perseguir pagos."]],
- client:[["plus","Publica el bolo","Fecha, sala, estilo y presupuesto. Publicarlo es gratis y lo ven DJs y fotógrafos de tu ciudad."],
+ client:[["plus","Publica el bolo","Fecha, sala, estilo y presupuesto. Publicarlo es gratis y lo ven DJs, fotógrafos y empresas de sonido de tu ciudad."],
          ["users","Recibe propuestas","Los artistas se postulan con su precio y su perfil. Comparas y eliges sin perder tiempo."],
          ["shield","Contrata y paga","Pagas con tarjeta en un clic. El artista queda confirmado y tienes tu justificante."]]
 };
 async function viewLanding(){
-  document.title="Cabina · Contrata DJs y fotógrafos";
+  document.title="Cabina · Contrata DJs, fotógrafos y sonido";
   root.innerHTML=`
   <header class="lnav"><div class="wrap">
     <a class="logo" href="#inicio"><span class="mk"></span>Cabina<span class="beta">Beta</span></a>
@@ -691,7 +695,7 @@ async function viewLanding(){
     <div>
       <span class="pill"><b>FASE BETA</b> Registro gratis para DJs, fotógrafos y salas</span>
       <h1>Tu próximo bolo<br>empieza <span class="hl">aquí</span>.</h1>
-      <p class="sub">Cabina conecta a discotecas y promotores con DJs y fotógrafos. Publica, postúlate, contrata y cobra en un mismo sitio, sin perseguir a nadie por WhatsApp.</p>
+      <p class="sub">Cabina conecta a discotecas y promotores con DJs, fotógrafos y empresas de sonido. Publica, postúlate, contrata y cobra en un mismo sitio, sin perseguir a nadie por WhatsApp.</p>
       <div class="ctas">
         <button class="btn pri lg" data-signup="dj">${I("disc")} Soy DJ o fotógrafo</button>
         <button class="btn ghost lg" data-signup="discoteca">${I("build")} Busco talento</button>
@@ -723,7 +727,7 @@ async function viewLanding(){
 
   <section class="s" id="como"><div class="wrap">
     <div class="s-head"><span class="lbl">Cómo funciona</span><h2>Tres pasos. Cero llamadas perdidas.</h2><p>Lo mismo que haces hoy por mensajes, pero ordenado, con el dinero asegurado y todo en un panel.</p></div>
-    <div class="seg" role="tablist"><button data-aud="talent" class="${landingAud==="talent"?"on":""}">Para DJs y fotógrafos</button><button data-aud="client" class="${landingAud==="client"?"on":""}">Para salas y promotores</button></div>
+    <div class="seg" role="tablist"><button data-aud="talent" class="${landingAud==="talent"?"on":""}">Para DJs, fotógrafos y sonido</button><button data-aud="client" class="${landingAud==="client"?"on":""}">Para salas y promotores</button></div>
     <div class="steps" id="stepsBox"></div>
     <div style="margin-top:28px"><button class="btn pri lg" id="stepsCta"></button></div>
   </div></section>
@@ -844,7 +848,7 @@ function completeness(){
     [t?"Biografía y estilo":"Descripción de la sala",!!(p.bio&&p.bio.length>20),"ajustes"],
     ["Instagram",!!p.instagram,"ajustes"],
   ];
-  if(t){items.push([p.role==="dj"?"Géneros que pinchas":"Especialidades",(p.genres||[]).length>0,"ajustes"]);items.push(["Tarifa orientativa",!!p.rate_eur,"ajustes"]);items.push(["Presskit subido",!!p.presskit_url,"ajustes"]);if(p.role==="dj")items.push(["Rider técnico subido",!!p.rider_url,"ajustes"]);}
+  if(t){items.push([p.role==="dj"?"Géneros que pinchas":p.role==="sonido"?"Servicios y equipo":"Especialidades",(p.genres||[]).length>0,"ajustes"]);items.push(["Tarifa orientativa",!!p.rate_eur,"ajustes"]);items.push([p.role==="sonido"?"Dosier subido":"Presskit subido",!!p.presskit_url,"ajustes"]);if(p.role==="dj"||p.role==="sonido")items.push(["Rider técnico subido",!!p.rider_url,"ajustes"]);}
   else items.push([p.role==="discoteca"?"Ficha técnica de la cabina":"Dosier subido",!!(p.role==="discoteca"?p.rider_url:p.presskit_url),"ajustes"]);
   return items;
 }
@@ -891,7 +895,7 @@ async function viewResumen(){
     const totalApps=open.reduce((s,e)=>s+e.app_count,0);
     const spent=bks.reduce((s,b)=>s+b.amount_cents,0);
     const needs=open.filter(e=>e.app_count>0);
-    if(!evs.length) notice=`<div class="notice">${I("bolt")}<div class="grow"><b>Publica tu primer bolo</b><small>Es gratis. Los DJs y fotógrafos de tu ciudad empezarán a postularse.</small></div><a href="#publicar" class="btn pri">Publicar bolo</a></div>`;
+    if(!evs.length) notice=`<div class="notice">${I("bolt")}<div class="grow"><b>Publica tu primer bolo</b><small>Es gratis. Los DJs, fotógrafos y empresas de sonido de tu ciudad empezarán a postularse.</small></div><a href="#publicar" class="btn pri">Publicar bolo</a></div>`;
     else if(needs.length) notice=`<div class="notice">${I("inbox")}<div class="grow"><b>Tienes ${totalApps} postulaci${totalApps===1?"ón":"ones"} por revisar</b><small>Elige a tu artista y deja el bolo cerrado.</small></div><button class="btn pri" data-ev="${needs[0].id}">Revisar ahora</button></div>`;
     kpis=`<div class="kpis">
       <div class="kpi hl"><div class="top">Bolos abiertos ${I("brief")}</div><b>${open.length}</b><small>buscando artista</small></div>
@@ -930,7 +934,7 @@ async function viewExplorar(){
   v.innerHTML=`<div class="ph"><div><h1>Buscar bolos</h1><p>${evs.length} bolos abiertos${f.city?` en ${h(f.city)}`:""}.</p></div></div>
     <form class="toolbar" id="flt">
       <div class="field grow"><label for="fCity">Ciudad</label><input id="fCity" value="${h(f.city)}" placeholder="Todas las ciudades"></div>
-      <div class="field"><label for="fRole">Buscan</label><select id="fRole"><option value="">Todo</option><option value="dj"${f.role==="dj"?" selected":""}>DJ</option><option value="fotografo"${f.role==="fotografo"?" selected":""}>Fotógrafo/a</option></select></div>
+      <div class="field"><label for="fRole">Buscan</label><select id="fRole"><option value="">Todo</option><option value="dj"${f.role==="dj"?" selected":""}>DJ</option><option value="fotografo"${f.role==="fotografo"?" selected":""}>Fotógrafo/a</option><option value="sonido"${f.role==="sonido"?" selected":""}>Sonido</option></select></div>
       <button class="btn">${I("search")} Filtrar</button></form>
     <div class="list">${evs.length?evs.map(e=>eventRow(e)).join(""):`<div class="empty">${I("search")}<b>No hay bolos con esos filtros</b><span>Prueba con otra ciudad o vuelve en unos días.</span></div>`}</div>`;
   bindEv(v);
@@ -1017,10 +1021,10 @@ function viewAjustes(){
     <div class="split"><div class="person">${avatar(p,"lg")}<div><b style="font-size:18px">${nm(p)}</b><div class="muted">${h(ROLES[p.role])}</div></div></div><div class="statgrid" id="myStats" style="min-width:260px">${statGrid(null,p.id)}</div></div>
     <div class="grid2"><div class="field"><label for="pName">Nombre</label><input id="pName" value="${h(p.display_name)}" maxlength="80" required></div>
       <div class="field"><label for="pCity">Ciudad</label><input id="pCity" value="${h(p.city||"")}"></div></div>
-    ${t?`<div class="grid2"><div class="field"><label for="pRate">Tarifa orientativa por bolo (€)</label><input id="pRate" type="number" min="0" step="10" value="${p.rate_eur??""}"></div>
-      <div class="field"><label for="pGenres">${p.role==="dj"?"Géneros":"Especialidades"}</label><input id="pGenres" value="${h((p.genres||[]).join(", "))}" placeholder="${p.role==="dj"?"techno, reggaeton, house":"eventos, retrato, aftermovie"}"><span class="hint">Separados por comas.</span></div></div>`:""}
+    ${t?`<div class="grid2"><div class="field"><label for="pRate">${p.role==="sonido"?"Precio orientativo por evento (€)":"Tarifa orientativa por bolo (€)"}</label><input id="pRate" type="number" min="0" step="10" value="${p.rate_eur??""}"></div>
+      <div class="field"><label for="pGenres">${p.role==="dj"?"Géneros":p.role==="sonido"?"Servicios y equipo":"Especialidades"}</label><input id="pGenres" value="${h((p.genres||[]).join(", "))}" placeholder="${p.role==="dj"?"techno, reggaeton, house":p.role==="sonido"?"line array, cabina DJ, iluminación, técnico":"eventos, retrato, aftermovie"}"><span class="hint">Separados por comas.</span></div></div>`:""}
     <div class="field"><label for="pIg">Instagram</label><input id="pIg" value="${h(p.instagram||"")}" placeholder="@tuusuario"></div>
-    <div class="field"><label for="pBio">${t?"Sobre ti":"Sobre la sala o promotora"}</label><textarea id="pBio" maxlength="1500" placeholder="${t?"Tu estilo, dónde has pinchado, qué te diferencia…":"Aforo, estilo musical, equipo de la cabina…"}">${h(p.bio||"")}</textarea></div>
+    <div class="field"><label for="pBio">${p.role==="sonido"?"Sobre la empresa":t?"Sobre ti":"Sobre la sala o promotora"}</label><textarea id="pBio" maxlength="1500" placeholder="${p.role==="sonido"?"Qué equipo tenéis, para qué aforos, zona en la que trabajáis…":t?"Tu estilo, dónde has pinchado, qué te diferencia…":"Aforo, estilo musical, equipo de la cabina…"}">${h(p.bio||"")}</textarea></div>
     <div><button class="btn pri">Guardar cambios</button></div></form>
   <div class="panel" style="max-width:780px;margin-top:18px"><div class="panel-h"><h3>Emails de Cabina</h3></div>
     <label class="check"><input type="checkbox" id="mkOpt" disabled> <span>Quiero recibir por email novedades, bolos destacados y promociones de Cabina.</span></label>
@@ -1032,7 +1036,7 @@ function viewAjustes(){
   <div class="panel" style="max-width:780px;margin-top:18px"><div class="panel-h"><h3>Foto y documentos</h3><span class="calc">PDF o imagen · máx. 15 MB</span></div>
     <div class="docrow">${avatar(p)}<div class="grow"><b>Foto de perfil</b><small>${p.avatar_url?"Subida":"Sin foto"} · JPG o PNG</small></div>
       <label class="btn sm ghost">${I("up")} ${p.avatar_url?"Cambiar":"Subir"}<input type="file" accept="image/*" data-up="avatar" hidden></label></div>
-    ${DOCS.map(([k,lt,lo,desc])=>{const url=p[k+"_url"];const label=t?lt:lo;return `<div class="docrow"><span class="docic">${I("file")}</span><div class="grow"><b>${label}</b><small>${url&&/^https:\/\//.test(url)?`<a href="${h(url)}" target="_blank" rel="noopener">Ver archivo</a>`:desc}</small></div>
+    ${DOCS.map(([k,lt,lo,desc])=>{const url=p[k+"_url"];const label=docLabel(k,p.role,lt,lo);const desc2=p.role==="sonido"?(k==="presskit"?"Presentación, trabajos anteriores y contacto":"Equipo disponible: altavoces, mesas, micros, iluminación…"):desc;return `<div class="docrow"><span class="docic">${I("file")}</span><div class="grow"><b>${label}</b><small>${url&&/^https:\/\//.test(url)?`<a href="${h(url)}" target="_blank" rel="noopener">Ver archivo</a>`:desc2}</small></div>
       ${url?`<button class="iconbtn" data-del="${k}" aria-label="Quitar ${label}">${I("trash")}</button>`:""}
       <label class="btn sm ${url?"ghost":"pri"}">${I("up")} ${url?"Reemplazar":"Subir"}<input type="file" accept="application/pdf,image/*" data-up="${k}" hidden></label></div>`;}).join("")}
   </div>`;
@@ -1072,10 +1076,10 @@ function viewPublicar(){
   const tm=new Date(Date.now()+86400000*3);tm.setHours(23,30,0,0);
   const local=new Date(tm.getTime()-tm.getTimezoneOffset()*60000).toISOString().slice(0,16);
   v.innerHTML=`<button class="back" onclick="history.back()">${I("left")} Volver</button>
-  <div class="ph"><div><h1>Publicar un bolo</h1><p>Gratis. Los artistas de tu ciudad lo verán al momento.</p></div></div>
+  <div class="ph"><div><h1>Publicar un bolo</h1><p>Gratis. Los DJs, fotógrafos y empresas de sonido de tu ciudad lo verán al momento.</p></div></div>
   <div class="cols"><form class="panel form" id="evf">
-    <div class="field"><label>¿A quién buscas?</label><div class="roles4" style="grid-template-columns:1fr 1fr">
-      ${["dj","fotografo"].map((k,i)=>`<button type="button" class="rolec${i===0?" on":""}" data-need="${k}"><span class="tick">${I("check")}</span><span class="ic">${I(ROLE_INFO[k].icon)}</span><b>${ROLE_INFO[k].t}</b></button>`).join("")}</div></div>
+    <div class="field"><label>¿A quién buscas?</label><div class="roles4" style="grid-template-columns:repeat(3,1fr)">
+      ${["dj","fotografo","sonido"].map((k,i)=>`<button type="button" class="rolec${i===0?" on":""}" data-need="${k}"><span class="tick">${I("check")}</span><span class="ic">${I(ROLE_INFO[k].icon)}</span><b>${k==="sonido"?"Sonido":ROLE_INFO[k].t}</b></button>`).join("")}</div></div>
     <div class="field"><label for="eTitle">Título del bolo</label><input id="eTitle" maxlength="120" placeholder="Sábado techno · warm-up de 00:00 a 02:00" required></div>
     <div class="grid2"><div class="field"><label for="eDate">Fecha y hora</label><input id="eDate" type="datetime-local" value="${local}" required></div>
       <div class="field"><label for="eBudget">Presupuesto orientativo (€)</label><input id="eBudget" type="number" min="0" step="10" placeholder="300"></div></div>
@@ -1129,7 +1133,7 @@ async function viewEvento(id){
       <div class="calc" id="apCalc"></div>
       <div class="field"><label for="apMsg">Mensaje para el organizador</label><textarea id="apMsg" maxlength="1500" placeholder="Tu estilo, experiencia y enlaces a tus sets o portfolio…"></textarea></div>
       <button class="btn pri lg block">Enviar postulación</button></form>`;
-  }else side=`<div class="panel"><h3>Bolo de otro organizador</h3><p class="muted">Solo DJs y fotógrafos pueden postularse.</p></div>`;
+  }else side=`<div class="panel"><h3>Bolo de otro organizador</h3><p class="muted">Solo DJs, fotógrafos y empresas de sonido pueden postularse.</p></div>`;
 
   v.innerHTML=`<button class="back" onclick="history.length>1?history.back():go('${me?"resumen":"inicio"}')">${I("left")} Volver</button>
   <div class="detail"><div class="stack" style="gap:20px">
@@ -1176,10 +1180,10 @@ async function viewTalento(){
   if(f.role) q=q.eq("role",f.role);
   const {data:ps=[]}=await q;
   await loadStats(ps.map(p=>p.id));
-  v.innerHTML=`<div class="ph"><div><h1>Talento</h1><p>DJs y fotógrafos listos para tu próxima fiesta.</p></div>${me?`<a href="#publicar" class="btn pri">${I("plus")} Publicar bolo</a>`:!me?`<button class="btn pri" data-signup="dj">Aparecer aquí gratis</button>`:""}</div>
+  v.innerHTML=`<div class="ph"><div><h1>Talento</h1><p>DJs, fotógrafos y empresas de sonido listos para tu próxima fiesta.</p></div>${me?`<a href="#publicar" class="btn pri">${I("plus")} Publicar bolo</a>`:!me?`<button class="btn pri" data-signup="dj">Aparecer aquí gratis</button>`:""}</div>
   <form class="toolbar" id="flt">
     <div class="field grow"><label for="fCity">Ciudad</label><input id="fCity" value="${h(f.city)}" placeholder="Todas las ciudades"></div>
-    <div class="field"><label for="fRole">Perfil</label><select id="fRole"><option value="">Todos</option><option value="dj"${f.role==="dj"?" selected":""}>DJ</option><option value="fotografo"${f.role==="fotografo"?" selected":""}>Fotógrafo/a</option></select></div>
+    <div class="field"><label for="fRole">Perfil</label><select id="fRole"><option value="">Todos</option><option value="dj"${f.role==="dj"?" selected":""}>DJ</option><option value="fotografo"${f.role==="fotografo"?" selected":""}>Fotógrafo/a</option><option value="sonido"${f.role==="sonido"?" selected":""}>Sonido</option></select></div>
     <button class="btn">${I("search")} Filtrar</button></form>
   <div class="cards">${ps.length?ps.map(p=>`<a class="tcard" href="#perfil-${p.id}">
     <div class="person">${avatar(p)}<div><h3 style="font-size:18px">${nm(p)}</h3><div class="muted" style="font-size:14px;display:flex;gap:4px;align-items:center">${I("pin")}${h(p.city||"Sin ciudad")}</div></div></div>
@@ -1213,12 +1217,12 @@ async function viewPerfil(id){
     <div class="social"><button class="statbtn" data-people="followers" data-pid="${p.id}"><b id="fCount">${st.followers}</b> seguidores</button><button class="statbtn" data-people="following" data-pid="${p.id}"><b>${st.following}</b> siguiendo</button><span><b>${st.posts}</b> publicaciones</span>
       ${isMe?`<a class="btn sm ghost" href="#ajustes">Editar perfil</a>`:me?`<button class="btn sm ${following?"ghost":"pri"}" id="followBtn" data-on="${following?1:0}">${following?"Siguiendo":I("userplus")+" Seguir"}</button>`:`<button class="btn sm pri" data-signup>${I("userplus")} Seguir</button>`}</div>
     <div class="tags">${chip(p.role)}${(p.genres||[]).map(g=>`<span class="tag">${h(g)}</span>`).join("")}</div>
-    ${p.bio?`<div class="panel"><h3>Sobre ${TALENT.includes(p.role)?"mí":"nosotros"}</h3><p style="white-space:pre-wrap;max-width:65ch;color:var(--fg-2)">${h(p.bio)}</p></div>`:""}
+    ${p.bio?`<div class="panel"><h3>Sobre ${TALENT.includes(p.role)&&p.role!=="sonido"?"mí":"nosotros"}</h3><p style="white-space:pre-wrap;max-width:65ch;color:var(--fg-2)">${h(p.bio)}</p></div>`:""}
     ${extra}
     <div class="stack"><h3>Publicaciones</h3>${posts.length?posts.map(postCard).join(""):`<p class="muted">Todavía no ha publicado nada.</p>`}</div>
   </div><div class="panel">
     ${p.rate_eur?`<div><span class="lbl">Tarifa orientativa</span><div style="font:800 32px var(--display);margin-top:8px">Desde ${eur(p.rate_eur)}</div></div>`:""}
-    ${DOCS.filter(([k])=>/^https:\/\//.test(p[k+"_url"]||"")).map(([k,lt,lo])=>`<a class="btn ghost block" href="${h(p[k+"_url"])}" target="_blank" rel="noopener" style="justify-content:flex-start">${I("file")} ${TALENT.includes(p.role)?lt:lo}</a>`).join("")}
+    ${DOCS.filter(([k])=>/^https:\/\//.test(p[k+"_url"]||"")).map(([k,lt,lo])=>`<a class="btn ghost block" href="${h(p[k+"_url"])}" target="_blank" rel="noopener" style="justify-content:flex-start">${I("file")} ${docLabel(k,p.role,lt,lo)}</a>`).join("")}
     ${ig?`<a class="btn ghost block" href="https://instagram.com/${ig}" target="_blank" rel="noopener">@${h(ig)} en Instagram</a>`:""}
     ${!me?`<button class="btn pri block" data-signup="discoteca">Contratar en Cabina</button>`:me&&p.id!==me.user.id&&TALENT.includes(p.role)?`<a class="btn pri block" href="#publicar">Publicar un bolo para contratar</a>`:""}
     <p class="muted" style="font-size:13px">En Cabina en ${new Date(p.created_at).toLocaleDateString("es-ES",{month:"long",year:"numeric"})}</p>
@@ -1231,6 +1235,7 @@ async function viewPerfil(id){
 }
 
 /* ---------- Comunidad ---------- */
+const docLabel=(k,role,lt,lo)=>role==="sonido"?(k==="presskit"?"Dosier de la empresa":"Listado de equipo"):TALENT.includes(role)?lt:lo;
 const DOCS=[["presskit","Presskit","Dosier de la sala o promotora","Tu presentación: bio, fotos, logos y enlaces"],["rider","Rider técnico","Ficha técnica de la cabina","Equipo que necesitas en cabina (CDJ, mesa, monitores…)"]];
 const POST_SEL="*, author:author_id(id,display_name,role,avatar_url,verified,verified_label), post_likes(user_id)";
 const ST={};
@@ -1349,7 +1354,7 @@ async function viewComunidad(){
   const sugg=sug.filter(p=>!fset.has(p.id)).slice(0,5);
   v.innerHTML=head+`<div class="cols"><div class="stack">
     <form class="panel composer" id="cmp">
-      <div class="person">${avatar(me.profile)}<textarea id="cBody" maxlength="1000" placeholder="${isTalent()?"¿Dónde pinchas este finde? Comparte un set, una fecha, una foto…":"Anuncia tus fiestas, line-ups o lo que buscas…"}"></textarea></div>
+      <div class="person">${avatar(me.profile)}<textarea id="cBody" maxlength="1000" placeholder="${me.profile.role==="sonido"?"¿Dónde montáis este finde? Comparte fotos del montaje, equipo nuevo…":isTalent()?"¿Dónde pinchas este finde? Comparte un set, una fecha, una foto…":"Anuncia tus fiestas, line-ups o lo que buscas…"}"></textarea></div>
       <img id="cPrev" class="post-img" alt="" hidden>
       <div class="cmp-f"><label class="btn sm ghost">${I("img")} Foto<input type="file" id="cImg" accept="image/*" hidden></label><span class="calc" id="cCnt" style="margin-left:auto">0/1000</span><button class="btn pri sm" id="cBtn">Publicar</button></div>
     </form>
@@ -1395,7 +1400,7 @@ const LEGAL_PAGES={
    ${LEGAL.registro?`<li><b>Datos registrales:</b> ${h(LEGAL.registro)}</li>`:""}
   </ul>
   <h2>Objeto</h2>
-  <p>Cabina es una plataforma en línea que pone en contacto a discotecas, salas y promotores de eventos con DJs y fotógrafos, y facilita el pago de las contrataciones a través de Stripe. Cabina actúa como intermediario: no organiza los eventos ni presta los servicios artísticos.</p>
+  <p>Cabina es una plataforma en línea que pone en contacto a discotecas, salas y promotores de eventos con DJs, fotógrafos y empresas de sonido, y facilita el pago de las contrataciones a través de Stripe. Cabina actúa como intermediario: no organiza los eventos ni presta los servicios artísticos.</p>
   <h2>Condiciones de acceso</h2>
   <p>El acceso a la web es gratuito. Para publicar bolos, postularse, contratar o usar la comunidad es necesario registrarse y aceptar las <a href="#condiciones">Condiciones de uso</a> y la <a href="#privacidad">Política de privacidad</a>.</p>
   <h2>Propiedad intelectual</h2>
@@ -1410,7 +1415,7 @@ const LEGAL_PAGES={
   <h2>1. Quién puede usar Cabina</h2>
   <p>Debes ser mayor de 18 años y dar datos verdaderos. Cada persona o empresa puede tener una cuenta. Eres responsable de guardar tu contraseña y de lo que se haga con tu cuenta.</p>
   <h2>2. Qué hace Cabina</h2>
-  <p>Cabina es un intermediario. Las salas y promotores publican bolos; los DJs y fotógrafos se postulan con su precio; la sala elige y paga dentro de la plataforma. El contrato del servicio artístico se celebra directamente entre la sala o promotor y el artista. Cabina no es parte de ese contrato, no organiza el evento y no garantiza su celebración ni la calidad de la actuación.</p>
+  <p>Cabina es un intermediario. Las salas y promotores publican bolos; los DJs, fotógrafos y empresas de sonido se postulan con su precio; la sala elige y paga dentro de la plataforma. El contrato del servicio artístico se celebra directamente entre la sala o promotor y el artista. Cabina no es parte de ese contrato, no organiza el evento y no garantiza su celebración ni la calidad de la actuación.</p>
   <h2>3. Precio y comisión</h2>
   <ul>
    <li>Registrarse, publicar bolos y postularse es gratis.</li>

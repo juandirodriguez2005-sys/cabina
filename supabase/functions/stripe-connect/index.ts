@@ -1,4 +1,4 @@
-// Alta de cobros para DJs y fotógrafos (Stripe Connect, cuentas v2)
+// Alta de cobros para DJs, fotógrafos y empresas de sonido (Stripe Connect, cuentas v2)
 import { admin, cors, createConnectedAccount, currentUser, json, onboardingLink, RETURN_PAGE, safeUrl, syncAccount } from "../_shared/common.ts";
 
 Deno.serve(async (req) => {
@@ -6,8 +6,8 @@ Deno.serve(async (req) => {
   try {
     const me = await currentUser(req);
     if (!me) return json({ error: "Inicia sesión" }, 401);
-    if (!["dj", "fotografo"].includes(me.profile.role)) {
-      return json({ error: "Solo DJs y fotógrafos necesitan cuenta de cobro" }, 403);
+    if (!["dj", "fotografo", "sonido"].includes(me.profile.role)) {
+      return json({ error: "Solo DJs, fotógrafos y empresas de sonido necesitan cuenta de cobro" }, 403);
     }
     const body = await req.json().catch(() => ({}));
 
